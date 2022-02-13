@@ -1,6 +1,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.DigitalInput;
 //import edu.wpi.first.wpilibj.Controller;
 //import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
@@ -77,9 +78,12 @@ public class Robot extends TimedRobot {
 
           //Sensors: Integrated hall effect for motor speed +
 
-              //In Gate: Beam Break
+              //In Gate: Beam Break - DIO ports
+              DigitalInput inGate_BB = new DigitalInput(1);
               //Mid Gate: Beam Break
+              DigitalInput midGate_BB = new DigitalInput(2);
               //Shooter Gate: Beam Break
+              DigitalInput shooter_BB = new DigitalInput(3);
               //Intake: Color Sensor
                 //Change the I2C port below to math the connection of your color sensor
                 private final I2C.Port i2cPort = I2C.Port.kOnboard;
