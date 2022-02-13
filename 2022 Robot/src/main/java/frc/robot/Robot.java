@@ -142,20 +142,6 @@ public class Robot extends TimedRobot {
               */
               Color detectedColor = m_colorSensor.getColor();
 
-              /**
-              * The sensor returns a raw IR value of the infrared light detected.
-              */
-              double IR = m_colorSensor.getIR();
-
-              /**
-              * Open Smart Dashboard or Shuffleboard to see the color detected by the 
-              * sensor.
-              */
-              SmartDashboard.putNumber("Red", detectedColor.red);
-              SmartDashboard.putNumber("Green", detectedColor.green);
-              SmartDashboard.putNumber("Blue", detectedColor.blue);
-              SmartDashboard.putNumber("IR", IR);
-
                /**
                 * Run the color match algorithm on our detected color
                 */
@@ -173,6 +159,22 @@ public class Robot extends TimedRobot {
                 } else {
                   colorString = "Unknown";
                 }
+              
+              /**
+              * The sensor returns a raw IR value of the infrared light detected.
+              */
+              //double IR = m_colorSensor.getIR();
+
+              /**
+              * Open Smart Dashboard or Shuffleboard to see the color detected by the 
+              * sensor.
+              */
+              SmartDashboard.putNumber("Red", detectedColor.red);
+              SmartDashboard.putNumber("Green", detectedColor.green);
+              SmartDashboard.putNumber("Blue", detectedColor.blue);
+              //SmartDashboard.putNumber("IR", IR);
+              SmartDashboard.putNumber("Confidence", match.confidence);
+              SmartDashboard.putString("Detected Color", colorString);
 
               /**
               * In addition to RGB IR values, the color sensor can also return an 
@@ -185,9 +187,9 @@ public class Robot extends TimedRobot {
               * or provide a threshold for when an object is close enough to provide
               * accurate color values.
               */
-              int proximity = m_colorSensor.getProximity();
+              //int proximity = m_colorSensor.getProximity();
 
-              SmartDashboard.putNumber("Proximity", proximity);
+              //SmartDashboard.putNumber("Proximity", proximity);
         }
   /**
    * This autonomous (along with the chooser code above) shows how to select between different
