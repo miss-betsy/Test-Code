@@ -25,8 +25,11 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.ColorMatch;
+import com.revrobotics.ColorMatchResult;
 import com.revrobotics.ColorSensorV3;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.ColorSensorV3.ColorSensorMeasurementRate;
 
 //import edu.wpi.first.util.sendable.SendableRegistry;
 
@@ -53,14 +56,6 @@ public class Robot extends TimedRobot {
     WPI_TalonFX LeftRear = new WPI_TalonFX(2, "rio");
     WPI_TalonFX RightFront = new WPI_TalonFX(3, "rio");
     WPI_TalonFX RightRear = new WPI_TalonFX(4, "rio");
-
-  //Group the left together
-    //MotorControllerGroup driveleft = new MotorControllerGroup(LeftFront, LeftRear);
-  //Group the Right together
-     //MotorControllerGroup driveright = new MotorControllerGroup(RightFront, RightRear);
-  //Drive
-    //DifferentialDrive drive = new DifferentialDrive(driveleft, driveright);
-
 
 //Cargo Handling
 
@@ -98,7 +93,14 @@ public class Robot extends TimedRobot {
             //Change the I2C port below to math the connection of your color sensor
             private final I2C.Port i2cPort = I2C.Port.kOnboard;
             private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
+            private final ColorMatch m_colorMatcher = new ColorMatch();
 
+            Color kRedTarget = new Color(0.561, 0.232, 0.114);
+            Color kBlueTarget = new Color(0.143, 0.427, 0.429);
+            Color kGreenTarget = new Color(0.197, 0.561, 0.240);
+            Color kYellowTarget = new Color(0.361, 0.524, 0.113);
+
+        
   //Shooter: Falcon
 
   /**
@@ -110,6 +112,11 @@ public class Robot extends TimedRobot {
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
+
+    m_colorMatcher.addColorMatch(kBlueTarget);
+    m_colorMatcher.addColorMatch(kGreenTarget);
+    m_colorMatcher.addColorMatch(kRedTarget);
+    m_colorMatcher.addColorMatch(kYellowTarget);   
   }
 
   /**
@@ -148,6 +155,24 @@ public class Robot extends TimedRobot {
               SmartDashboard.putNumber("Green", detectedColor.green);
               SmartDashboard.putNumber("Blue", detectedColor.blue);
               SmartDashboard.putNumber("IR", IR);
+
+               /**
+                * Run the color match algorithm on our detected color
+                */
+                String colorString;
+                ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);
+
+                if (match.color == kBlueTarget) {
+                  colorString = "Blue";
+                } else if (match.color == kRedTarget) {
+                  colorString = "Red";
+                } else if (match.color == kGreenTarget) {
+                  colorString = "Green";
+                } else if (match.color == kYellowTarget) {
+                  colorString = "Yellow";
+                } else {
+                  colorString = "Unknown";
+                }
 
               /**
               * In addition to RGB IR values, the color sensor can also return an 
