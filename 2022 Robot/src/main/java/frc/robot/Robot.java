@@ -287,7 +287,6 @@ public class Robot extends TimedRobot {
 		
 		/* Outside deadband */ 
         return 0;     
-  
 }
 
   /** This function is called once when the robot is disabled. */
