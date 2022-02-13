@@ -1,0 +1,16 @@
+{
+  "HALProvider": {
+    "PWM Outputs": {
+      "window": {
+        "visible": true
+      }
+    }
+  },
+  "NTProvider": {
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/LiveWindow/Ungrouped/DifferentialDrive[1]": "DifferentialDrive",
+      "/SmartDashboard/Auto choices": "String Chooser"
+    }
+  }
+}

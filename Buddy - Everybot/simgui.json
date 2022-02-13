@@ -1,0 +1,22 @@
+{
+  "HALProvider": {
+    "PWM Outputs": {
+      "window": {
+        "visible": true
+      }
+    }
+  },
+  "NTProvider": {
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/LiveWindow/Ungrouped/drive": "DifferentialDrive"
+    },
+    "windows": {
+      "/LiveWindow/Ungrouped/drive": {
+        "window": {
+          "visible": true
+        }
+      }
+    }
+  }
+}
