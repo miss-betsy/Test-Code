@@ -2,15 +2,15 @@ What I'm aiming for:
 
 1 Cargo Handling
 
-      a.  Intake
-           i. Pivot (Double Acting Solenoid to Piston)
-                 1. Extend (intake is out of the frame)
-                 2. Retract (intake is stowed inside the frame)
-          ii. Roller Drive (SparkMax on CAN to NEO motor)
-                 1. In (Appropriate RPM Set Point, but as fast as possible)
-                 2. Out (Appropriate RPM Set Point to keep balls out of the way during field traversal)
-         iii. Sensors
-                 1. Integrated hall effect for motor speed
+     a.  Intake
+          i. Pivot (Double Acting Solenoid to Piston)
+                1. Extend (intake is out of the frame)
+                2. Retract (intake is stowed inside the frame)
+         ii. Roller Drive (SparkMax on CAN to NEO motor)
+                1. In (Appropriate RPM Set Point, but as fast as possible)
+                2. Out (Appropriate RPM Set Point to keep balls out of the way during field traversal)
+        iii. Sensors
+                1. Integrated hall effect for motor speed
       
   b. Centering
          i. Left and Right conveyor segments (SparkMax on CAN to NEO motor)
