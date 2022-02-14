@@ -29,7 +29,7 @@ import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorMatchResult;
 import com.revrobotics.ColorSensorV3;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import com.revrobotics.ColorSensorV3.ColorSensorMeasurementRate;
+//import com.revrobotics.ColorSensorV3.ColorSensorMeasurementRate;
 
 //import edu.wpi.first.util.sendable.SendableRegistry;
 
