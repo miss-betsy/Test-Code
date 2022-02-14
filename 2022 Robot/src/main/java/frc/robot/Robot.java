@@ -90,11 +90,11 @@ public class Robot extends TimedRobot {
           //Shooter Gate: Beam Break
           DigitalInput shooter_BB = new DigitalInput(3);
           //Intake: Color Sensor
-            //Change the I2C port below to math the connection of your color sensor
             private final I2C.Port i2cPort = I2C.Port.kOnboard;
             private final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
             private final ColorMatch m_colorMatcher = new ColorMatch();
 
+            //Adjust RBG valies based on scanning ball with shuffleboard
             Color kRedTarget = new Color(0.561, 0.232, 0.114);
             Color kBlueTarget = new Color(0.143, 0.427, 0.429);
             Color kGreenTarget = new Color(0.197, 0.561, 0.240);
@@ -117,7 +117,7 @@ public class Robot extends TimedRobot {
     m_colorMatcher.addColorMatch(kGreenTarget);
     m_colorMatcher.addColorMatch(kRedTarget);
     m_colorMatcher.addColorMatch(kYellowTarget);   
-  }
+   }
 
   /**
    * This function is called every robot packet, no matter the mode. Use this for items like
