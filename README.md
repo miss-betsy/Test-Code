@@ -1,8 +1,13 @@
+## Specifications
+
+## Resources
+https://www.markdownguide.org/cheat-sheet/
+
 What I'm aiming for:
 
-1 Cargo Handling
+# Cargo Handling
 
-     a.  Intake
+##  Intake
           i. Pivot (Double Acting Solenoid to Piston)
                 1. Extend (intake is out of the frame)
                 2. Retract (intake is stowed inside the frame)
@@ -12,14 +17,14 @@ What I'm aiming for:
         iii. Sensors
                 1. Integrated hall effect for motor speed
       
-  b. Centering
+## Centering
          i. Left and Right conveyor segments (SparkMax on CAN to NEO motor)
               1. Center (appropriate RPM set point)
               2. Eject (As fast as possible - RPM)
         ii. Sensors
               1. Integrated hall effect for motor speed
       
-  c. Conveyor
+## Conveyor
         i. Conveyor segment from centering section to shooter (SparkMax on CAN to NEO motor)
               1. Up 
               2. Down
@@ -34,21 +39,21 @@ What I'm aiming for:
                    d. Run the conveyor down and Centering in Eject to spit the ball out to one side of the robot or the other.
               5. Integrated hall effect for motor speed
               
-    d. Shooter
+## Shooter
         i. 1. Run the shooter in the direction of projecting the ball out of the robot
             1. Idle: Maintain about 60% shooter speed so that we can get to speed faster when we are ready to shoot
             2. Shoot: Set the shooter to the appropriate RPM setpoint for the experimentally determined best surface speed
 
-2. Hanging
-    a. Arms
+# Hanging
+## Arms
         i. Tilt (Double Acting Solenoid to Piston)
             1. Vertical (retracted)
             2. Tilted (extended)
         ii. Reach (Double Acting Solenoid to Piston)
             1. Reach (extend)
             2. Pull (retract)
-     b. Static Hooks (Double Acting Solenoid to Piston)
+## Static Hooks (Double Acting Solenoid to Piston)
         i. Clamp (extend)
             1. Release (retract)
             
-3. Drive
+# Drive
