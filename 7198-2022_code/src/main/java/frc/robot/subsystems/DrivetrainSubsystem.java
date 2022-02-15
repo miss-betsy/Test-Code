@@ -23,8 +23,8 @@ public class DrivetrainSubsystem extends SubsystemBase {
     motorFrontRight.setInverted(TalonFXInvertType.CounterClockwise);
     motorBackRight.setInverted(TalonFXInvertType.CounterClockwise);
 
-    motorBackLeft.setInverted(TalonFXInvertType.CounterClockwise);
-    motorFrontLeft.setInverted(TalonFXInvertType.CounterClockwise);
+    motorBackLeft.setInverted(TalonFXInvertType.Clockwise);
+    motorFrontLeft.setInverted(TalonFXInvertType.Clockwise);
 
   }
 
