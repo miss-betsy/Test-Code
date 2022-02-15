@@ -4,11 +4,18 @@
 
 package frc.robot.subsystems;
 
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Centering extends SubsystemBase {
+public class CenteringSubsystem extends SubsystemBase {
   /** Creates a new Centering. */
-  public Centering() {}
+  public CenteringSubsystem() {
+
+    //Left and Right
+      CANSparkMax centerMotor = new CANSparkMax(2, MotorType.kBrushless);
+  }
 
   @Override
   public void periodic() {
