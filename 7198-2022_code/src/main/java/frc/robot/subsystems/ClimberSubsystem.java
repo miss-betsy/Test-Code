@@ -4,11 +4,23 @@
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ClimberSubsystem extends SubsystemBase {
   /** Creates a new ClimberSubsystem. */
-  public ClimberSubsystem() {}
+  public ClimberSubsystem() {
+
+    //Tilt
+    DoubleSolenoid tilt = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 2, 3);
+
+    //Reach
+    DoubleSolenoid reach = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 4, 5);
+
+    //Static Hooks
+    DoubleSolenoid hooks = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 6, 7);
+  }
 
   @Override
   public void periodic() {
