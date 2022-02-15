@@ -18,6 +18,8 @@ public class IntakeSubsystem extends SubsystemBase {
     //Roller Drive
       CANSparkMax rollerMotor = new CANSparkMax(1, MotorType.kBrushless);
 
+      
+
     //Pivot - Air
       DoubleSolenoid intakePneumatic = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
   }
