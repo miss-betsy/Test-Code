@@ -4,11 +4,21 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
+import com.ctre.phoenix.motorcontrol.can.TalonFX;
+
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterSubsystem extends SubsystemBase {
   /** Creates a new ShooterSubsystem. */
-  public ShooterSubsystem() {}
+  public ShooterSubsystem() {
+
+    //Shooter Motor
+      TalonFX shooterMotor = new TalonFX(4);
+
+    //Set Direction
+    shooterMotor.setInverted(TalonFXInvertType.CounterClockwise);
+  }
 
   @Override
   public void periodic() {
