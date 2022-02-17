@@ -29,6 +29,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
   }
 
   public void setPower(double leftPower, double rightPower){
+    
     motorFrontRight.set(ControlMode.PercentOutput, rightPower);
     motorBackRight.set(ControlMode.PercentOutput, rightPower);
 

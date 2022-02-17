@@ -7,21 +7,31 @@ package frc.robot.subsystems;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.CAN;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class IntakeSubsystem extends SubsystemBase {
   /** Creates a new IntakeSubsystem. */
+  CANSparkMax rollerMotor;
+
+  DoubleSolenoid intakePneumatic;
+
+
   public IntakeSubsystem() {
 
     //Roller Drive
-      CANSparkMax rollerMotor = new CANSparkMax(1, MotorType.kBrushless);
+      rollerMotor = new CANSparkMax(1, MotorType.kBrushless);
 
       
 
     //Pivot - Air
-      DoubleSolenoid intakePneumatic = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
+      intakePneumatic = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
+  }
+
+  public void setRollerPower(double power){
+    rollerMotor.set(power);
   }
 
   @Override
