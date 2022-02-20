@@ -23,12 +23,13 @@ public class DrivetrainSubsystem extends SubsystemBase {
     motorFrontRight.setInverted(TalonFXInvertType.CounterClockwise);
     motorBackRight.setInverted(TalonFXInvertType.CounterClockwise);
 
-    motorBackLeft.setInverted(TalonFXInvertType.CounterClockwise);
-    motorFrontLeft.setInverted(TalonFXInvertType.CounterClockwise);
+    motorBackLeft.setInverted(TalonFXInvertType.Clockwise);
+    motorFrontLeft.setInverted(TalonFXInvertType.Clockwise);
 
   }
 
   public void setPower(double leftPower, double rightPower){
+    
     motorFrontRight.set(ControlMode.PercentOutput, rightPower);
     motorBackRight.set(ControlMode.PercentOutput, rightPower);
 
