@@ -7,7 +7,14 @@ package frc.robot;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.IntakeBalls;
+import frc.robot.subsystems.CenteringSubsystem;
+import frc.robot.subsystems.ClimberSubsystem;
+import frc.robot.subsystems.ConveyorSubsystem;
+import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 
 /**
@@ -17,10 +24,20 @@ import edu.wpi.first.wpilibj2.command.Command;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-  // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
+  //Controllers
+  public static XboxController controller = new XboxController(0);
 
-  private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
+
+  // The robot's subsystems and commands are defined here...
+  public static final CenteringSubsystem centering = new CenteringSubsystem();
+  public static final ClimberSubsystem climber = new ClimberSubsystem();
+  public static final ConveyorSubsystem conveyor = new ConveyorSubsystem();
+  public static final DrivetrainSubsystem drive = new DrivetrainSubsystem();
+  public static final IntakeSubsystem eat = new IntakeSubsystem();
+  public static final ShooterSubsystem shooter = new ShooterSubsystem();
+
+
+  //private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -34,7 +51,9 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
-  private void configureButtonBindings() {}
+  private void configureButtonBindings() {
+    //controller.rightBumper.whileHeld(new IntakeBalls());
+  }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
