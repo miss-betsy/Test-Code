@@ -7,18 +7,22 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.commands.Drive;
 
 public class DrivetrainSubsystem extends SubsystemBase {
 
-  TalonFX motorFrontRight, motorFrontLeft, motorBackRight, motorBackLeft;
+  WPI_TalonFX motorFrontRight, motorFrontLeft, motorBackRight, motorBackLeft;
+  DifferentialDrive drive = new DifferentialDrive(motorFrontLeft, motorFrontRight);
 
   public DrivetrainSubsystem() {
-    motorFrontRight = new TalonFX(00);
-    motorFrontLeft = new TalonFX(01);
-    motorBackRight = new TalonFX(02);
-    motorBackLeft = new TalonFX(03);
+    motorFrontRight = new WPI_TalonFX(00);
+    motorFrontLeft = new WPI_TalonFX(01);
+    motorBackRight = new WPI_TalonFX(02);
+    motorBackLeft = new WPI_TalonFX(03);
 
     motorFrontRight.setInverted(TalonFXInvertType.CounterClockwise);
     motorBackRight.setInverted(TalonFXInvertType.CounterClockwise);
@@ -26,6 +30,11 @@ public class DrivetrainSubsystem extends SubsystemBase {
     motorBackLeft.setInverted(TalonFXInvertType.Clockwise);
     motorFrontLeft.setInverted(TalonFXInvertType.Clockwise);
 
+    
+  }
+  
+  public void arcadeDrive(double s, double r){
+    drive.arcadeDrive(s, r);
   }
 
   public void setPower(double leftPower, double rightPower){
