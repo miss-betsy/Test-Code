@@ -5,18 +5,20 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.commands.Drive;
 
 public class DrivetrainSubsystem extends SubsystemBase {
 
   WPI_TalonFX motorFrontRight, motorFrontLeft, motorBackRight, motorBackLeft;
-  DifferentialDrive drive = new DifferentialDrive(motorFrontLeft, motorFrontRight);
+  DifferentialDrive drive;
 
   public DrivetrainSubsystem() {
     motorFrontRight = new WPI_TalonFX(00);
@@ -30,11 +32,16 @@ public class DrivetrainSubsystem extends SubsystemBase {
     motorBackLeft.setInverted(TalonFXInvertType.Clockwise);
     motorFrontLeft.setInverted(TalonFXInvertType.Clockwise);
 
-    
+    //motorBackLeft.set(TalonFXControlMode.Follower, motorFrontLeft);
+    //motorBackRight.set(TalonFXControlMode.Follower, motorFrontRight);
+
+    //drive = new DifferentialDrive(motorFrontLeft, motorFrontRight);
   }
   
-  public void arcadeDrive(double s, double r){
-    drive.arcadeDrive(s, r);
+  public void arcadeDrive(double throttle, double rotation){
+    double leftPower = throttle+rotation;
+    double rightPower = throttle-rotation;
+    setPower(leftPower, rightPower);
   }
 
   public void setPower(double leftPower, double rightPower){
@@ -45,6 +52,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
     motorFrontLeft.set(ControlMode.PercentOutput, leftPower);
     motorBackLeft.set(ControlMode.PercentOutput, leftPower);
   }
+
 
   @Override
   public void periodic() {
