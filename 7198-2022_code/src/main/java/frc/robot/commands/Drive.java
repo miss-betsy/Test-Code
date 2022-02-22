@@ -24,8 +24,11 @@ public class Drive extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    //print statement vales of controllers
+    System.out.println(RobotContainer.controller.getLeftY()+"  "+RobotContainer.controller.getRightX());
+
     //Send joystick commands to the drivetrain subsystem
-    RobotContainer.drive.arcadeDrive(RobotContainer.controller.getLeftY(),
+    RobotContainer.drive.setPower(RobotContainer.controller.getLeftY(),
                                      RobotContainer.controller.getRightX());
   }
 
