@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.commands.StopIntake;
+//import frc.robot.commands.StopIntake;
 
 public class IntakeSubsystem extends SubsystemBase {
   /** Creates a new IntakeSubsystem. */
@@ -30,7 +30,7 @@ public class IntakeSubsystem extends SubsystemBase {
       intakePneumatic = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
 
           //Default command for the subsystem
-          this.setDefaultCommand(new StopIntake(this));   
+          //this.setDefaultCommand(new StopIntake(this));   
   }
 
   //Control motor speed
