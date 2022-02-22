@@ -6,8 +6,10 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.commands.Drive;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.commands.IntakeBalls;
+import frc.robot.commands.StopIntake;
 import frc.robot.subsystems.CenteringSubsystem;
 import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.ConveyorSubsystem;
@@ -16,6 +18,8 @@ import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -41,8 +45,23 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+
+
     // Configure the button bindings
     configureButtonBindings();
+
+    //set defaults
+    setAllDefaultCommands();
+  }
+  
+  private void setAllDefaultCommands(){
+    setDefaultCommand(drive, new Drive(drive));
+    setDefaultCommand(eat, new StopIntake(eat));
+  }
+
+
+  private void setDefaultCommand(Subsystem subsystem, Command defaultCommand){
+     CommandScheduler.getInstance().setDefaultCommand(subsystem, defaultCommand);
   }
 
   /**
@@ -60,8 +79,8 @@ public class RobotContainer {
    *
    * @return the command to run in autonomous
    */
-  public Command getAutonomousCommand() {
+  //public Command getAutonomousCommand() {
     // An ExampleCommand will run in autonomous
-    return m_autoCommand;
-  }
+    //return m_autoCommand;
+  //}
 }
