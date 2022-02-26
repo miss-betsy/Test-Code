@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -23,7 +24,9 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import com.fasterxml.jackson.databind.introspect.TypeResolutionContext.Empty;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorMatchResult;
@@ -49,13 +52,20 @@ public class Robot extends TimedRobot {
   //Controller
   XboxController controller = new XboxController(0);
 
+  //Tells the robot what alliance it
+  String allianceColor = DriverStation.getAlliance().toString();
+
+  //Color String
+  String colorString;
+
   //Drive Train
     //Drive: 4 Falcon motors with integrated motor controllers
 
+    //Rio tells it that the system is the Rio, every other system will ignore
     WPI_TalonFX LeftFront = new WPI_TalonFX(1, "rio");
-    WPI_TalonFX LeftRear = new WPI_TalonFX(2, "rio");
-    WPI_TalonFX RightFront = new WPI_TalonFX(3, "rio");
-    WPI_TalonFX RightRear = new WPI_TalonFX(4, "rio");
+    WPI_TalonFX LeftRear = new WPI_TalonFX(3, "rio");
+    WPI_TalonFX RightFront = new WPI_TalonFX(0, "rio");
+    WPI_TalonFX RightRear = new WPI_TalonFX(2, "rio");
 
 //Cargo Handling
 
@@ -102,6 +112,7 @@ public class Robot extends TimedRobot {
 
         
   //Shooter: Falcon
+    TalonSRX shooterMotor = new TalonSRX(4);
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -145,7 +156,7 @@ public class Robot extends TimedRobot {
                /**
                 * Run the color match algorithm on our detected color
                 */
-                String colorString;
+                
                 ColorMatchResult match = m_colorMatcher.matchClosestColor(detectedColor);
 
                 if (match.color == kBlueTarget) {
@@ -206,6 +217,8 @@ public class Robot extends TimedRobot {
     m_autoSelected = m_chooser.getSelected();
     // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
     System.out.println("Auto selected: " + m_autoSelected);
+
+    allianceColor = DriverStation.getAlliance().toString();
   }
 
   /** This function is called periodically during autonomous. */
@@ -225,6 +238,8 @@ public class Robot extends TimedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
+
+    allianceColor = DriverStation.getAlliance().toString();
 
     /* Ensure motor output is neutral during init */
     LeftFront.set(ControlMode.PercentOutput, 0);
@@ -254,16 +269,9 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    //Intake control
-      //If the left bumper button on the controller is pressed the intake is down(forward), 
-       //else it isn't pressed the intake is up(reverse)
-       if (controller.getLeftBumper()){
-        intakePneumatic.set(Value.kForward);
-      } else {
-       intakePneumatic.set(Value.kReverse);
-      }
+    //Drivetrain Control
     /* Gamepad processing */
-		double forward = -1 * controller.getLeftY();
+		double forward = -1.0 * controller.getLeftY();
 		double turn = controller.getRightX();		
 		forward = Deadband(forward);
 		turn = Deadband(turn);
@@ -273,6 +281,149 @@ public class Robot extends TimedRobot {
 		LeftRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
     RightFront.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, +turn);
 		RightRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
+
+  //Conveyor Control
+  String conveyorState = "Empty";
+      switch (conveyorState) {
+            case "Empty": //what will execute while conveyor is empty
+                //Intake control
+                 //If the left bumper button on the controller is pressed the intake is down(forward), 
+                  //else it isn't pressed the intake is up(reverse)
+                  if (controller.getLeftBumper()){
+                    intakePneumatic.set(Value.kForward);
+                  if (controller.getAButton()){
+                    rollerMotor.set(-1.0); //if they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
+                    centerMotor.set(-1.0);
+                  } else {
+                    rollerMotor.set(1.0);
+                    centerMotor.set(1.0);
+                  }
+                  } else {
+                    intakePneumatic.set(Value.kReverse);
+                    rollerMotor.set(0.0);
+                  }
+
+                  //if the beam break is broken, then the state moves to Stage2Color to run conveyor
+                  if (inGate_BB.get()) {
+                    conveyorState = "Stage2Color";
+                  }
+            break;
+            
+            case "Stage2Color": 
+              //lift intake and stop roller motor
+              intakePneumatic.set(Value.kReverse);
+              rollerMotor.set(0.0);
+
+              //run conveyor
+              conveyorMotor.set(1.0);
+
+              //if not in gate
+              if (!inGate_BB.get()) {
+                conveyorState = "Judge";
+              }
+            break;
+            
+            case "Judge": 
+            //stop conveyor
+            conveyorMotor.set(0.0);
+
+            //check the color sensor - must match the alliance color
+            if (allianceColor == colorString) {
+              conveyorState = "Stage2Mid";
+            } else {
+              conveyorState = "Eject";
+            }
+            break;
+            
+            case "Stage2Mid": 
+            conveyorMotor.set(1.0);
+            if (midGate_BB.get()) {
+              conveyorState = "Intake2";
+            } 
+            break;
+            
+            case "Intake2": 
+            conveyorMotor.set(0.0);
+                  //Intake control
+                  //If the left bumper button on the controller is pressed the intake is down(forward), 
+                  //else it isn't pressed the intake is up(reverse)
+                  if (controller.getLeftBumper()){
+                    intakePneumatic.set(Value.kForward);
+                  if (controller.getAButton()){
+                    rollerMotor.set(-1.0); //if they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
+                    centerMotor.set(-1.0);
+                  } else {
+                    rollerMotor.set(1.0);
+                    centerMotor.set(1.0);
+                  }
+                  } else {
+                    intakePneumatic.set(Value.kReverse);
+                    rollerMotor.set(0.0);
+                  }
+
+                  if (inGate_BB.get()) {
+                    conveyorState = "Stage2Color2";
+                  }
+            break;
+            
+            case "Stage2Color2": 
+              //lift intake and stop roller motor
+              intakePneumatic.set(Value.kReverse);
+              rollerMotor.set(0.0);
+
+              //run conveyor
+              conveyorMotor.set(1.0);
+
+              //if not in gate
+              if (!inGate_BB.get()) {
+                conveyorState = "Judge2";
+              }
+            break;
+            
+            case "Judge2": 
+            //stop conveyor
+            conveyorMotor.set(0.0);
+
+            //check the color sensor - must match the alliance color
+            if (allianceColor == colorString) {
+              conveyorState = "Wait2Shoot";
+            } else {
+              conveyorState = "Eject2";
+            }            
+            break;
+            
+            case "Wait2Shoot":
+            shooterMotor.set(ControlMode.Velocity, 0.6); //change .6 to be 60% of full speed
+            //if the 'X' button is pushed, fire the balls
+            if (controller.getXButton()) {
+              conveyorState = "Fire";
+            }
+            break;
+            
+            case "Fire": 
+            //if falcon is up to speed
+            shooterMotor.set(ControlMode.Velocity, 1.0); //Change 1.0 to actual velocity when known
+            shooterMotor.getSelectedSensorVelocity(); 
+            if (shooterMotor.getSelectedSensorVelocity() >= 1.0) {// Change 1.0 to acutal velocity when known
+              conveyorMotor.set(1.0);
+              if (controller.getXButton() && !inGate_BB.get() && !midGate_BB.get() && !shooter_BB.get()) { //shooter runs when x is pushed and continues until x is pushed again. Do not hit x again until conveyor is empty
+                conveyorState = "Empty";
+              }
+            }
+            break;
+
+            case "Eject1": 
+              intakePneumatic.set(Value.kForward);
+              conveyorMotor.set(-1.0);
+              centerMotor.set(-1.0);
+              rollerMotor.set(-1.0);
+            break;
+
+            case "Eject2":
+            break;
+      }
+
+
     }
 
 	/** Deadband 5 percent, used on the gamepad */
@@ -286,7 +437,7 @@ public class Robot extends TimedRobot {
 			return value;
 		
 		/* Outside deadband */ 
-        return 0;     
+        return 0;    
 }
 
   /** This function is called once when the robot is disabled. */
