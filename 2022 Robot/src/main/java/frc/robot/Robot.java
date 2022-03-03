@@ -114,6 +114,8 @@ public class Robot extends TimedRobot {
   //Shooter: Falcon
     TalonSRX shooterMotor = new TalonSRX(4);
 
+    //convayer states
+    String conveyorState = "intake1";
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -218,6 +220,7 @@ public class Robot extends TimedRobot {
     // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
     System.out.println("Auto selected: " + m_autoSelected);
 
+    //tells the robot what alliance color we are
     allianceColor = DriverStation.getAlliance().toString();
   }
 
@@ -227,6 +230,8 @@ public class Robot extends TimedRobot {
     switch (m_autoSelected) {
       case kCustomAuto:
         // Put custom auto code here
+
+        // taxi autonomous
         break;
       case kDefaultAuto:
       default:
@@ -283,9 +288,9 @@ public class Robot extends TimedRobot {
 		RightRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
 
   //Conveyor Control
-  String conveyorState = "Empty";
+  
       switch (conveyorState) {
-            case "Empty": //what will execute while conveyor is empty
+            case "intake1": //what will execute while conveyor is empty
                 //Intake control
                  //If the left bumper button on the controller is pressed the intake is down(forward), 
                   //else it isn't pressed the intake is up(reverse)
@@ -301,15 +306,16 @@ public class Robot extends TimedRobot {
                   } else {
                     intakePneumatic.set(Value.kReverse);
                     rollerMotor.set(0.0);
+                    centerMotor.set(0.0);
                   }
 
                   //if the beam break is broken, then the state moves to Stage2Color to run conveyor
                   if (inGate_BB.get()) {
-                    conveyorState = "Stage2Color";
+                    conveyorState = "move2color1";
                   }
             break;
             
-            case "Stage2Color": 
+            case "move2color1": 
               //lift intake and stop roller motor
               intakePneumatic.set(Value.kReverse);
               rollerMotor.set(0.0);
@@ -319,23 +325,23 @@ public class Robot extends TimedRobot {
 
               //if not in gate
               if (!inGate_BB.get()) {
-                conveyorState = "Judge";
+                conveyorState = "Judgecolor1";
               }
             break;
             
-            case "Judge": 
+            case "Judgecolor1": 
             //stop conveyor
             conveyorMotor.set(0.0);
 
             //check the color sensor - must match the alliance color
             if (allianceColor == colorString) {
-              conveyorState = "Stage2Mid";
+              conveyorState = "move2Mid";
             } else {
-              conveyorState = "Eject";
+              conveyorState = "Ejectball1";
             }
             break;
             
-            case "Stage2Mid": 
+            case "move2Mid": 
             conveyorMotor.set(1.0);
             if (midGate_BB.get()) {
               conveyorState = "Intake2";
@@ -347,7 +353,7 @@ public class Robot extends TimedRobot {
                   //Intake control
                   //If the left bumper button on the controller is pressed the intake is down(forward), 
                   //else it isn't pressed the intake is up(reverse)
-                  if (controller.getLeftBumper()){
+                  if (controller.getLeftBumper()){ //take pneumatics completely out if actuation is removed to avoid if statment issues
                     intakePneumatic.set(Value.kForward);
                   if (controller.getAButton()){
                     rollerMotor.set(-1.0); //if they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
@@ -359,14 +365,19 @@ public class Robot extends TimedRobot {
                   } else {
                     intakePneumatic.set(Value.kReverse);
                     rollerMotor.set(0.0);
+                    centerMotor.set(0.0);
                   }
 
                   if (inGate_BB.get()) {
-                    conveyorState = "Stage2Color2";
+                    conveyorState = "move2Color2";
+                  }
+
+                  if(controller.getXButton()) {
+                    conveyorState = "move2shooter";
                   }
             break;
             
-            case "Stage2Color2": 
+            case "move2Color2": 
               //lift intake and stop roller motor
               intakePneumatic.set(Value.kReverse);
               rollerMotor.set(0.0);
@@ -376,53 +387,94 @@ public class Robot extends TimedRobot {
 
               //if not in gate
               if (!inGate_BB.get()) {
-                conveyorState = "Judge2";
+                conveyorState = "Judge2color2";
               }
             break;
             
-            case "Judge2": 
+            case "Judge2color2": 
             //stop conveyor
             conveyorMotor.set(0.0);
 
             //check the color sensor - must match the alliance color
             if (allianceColor == colorString) {
-              conveyorState = "Wait2Shoot";
+              conveyorState = "move2shooter";
             } else {
-              conveyorState = "Eject2";
+              conveyorState = "Ejectball2";
             }            
             break;
             
-            case "Wait2Shoot":
-            shooterMotor.set(ControlMode.Velocity, 0.6); //change .6 to be 60% of full speed
-            //if the 'X' button is pushed, fire the balls
-            if (controller.getXButton()) {
-              conveyorState = "Fire";
+            case "move2shooter":
+            conveyorMotor.set(1.0);
+            if (shooter_BB.get()) {
+              conveyorState = "spinup";
             }
             break;
             
-            case "Fire": 
-            //if falcon is up to speed
-            shooterMotor.set(ControlMode.Velocity, 1.0); //Change 1.0 to actual velocity when known
-            shooterMotor.getSelectedSensorVelocity(); 
-            if (shooterMotor.getSelectedSensorVelocity() >= 1.0) {// Change 1.0 to acutal velocity when known
-              conveyorMotor.set(1.0);
-              if (controller.getXButton() && !inGate_BB.get() && !midGate_BB.get() && !shooter_BB.get()) { //shooter runs when x is pushed and continues until x is pushed again. Do not hit x again until conveyor is empty
-                conveyorState = "Empty";
-              }
+            case "spinup": 
+            conveyorMotor.set(0.0);
+            shooterMotor.set(ControlMode.Velocity, 0.6); //change .6 to be 60% of full speed
+            //if the 'X' button is pushed, fire the balls
+            if (controller.getXButton()) {
+              conveyorState = "FireFireFire";
             }
             break;
 
-            case "Eject1": 
+            case "FireFireFire":
+                        //if falcon is up to speed
+                        shooterMotor.set(ControlMode.Velocity, 1.0); //Change 1.0 to actual velocity when known
+                        shooterMotor.getSelectedSensorVelocity(); 
+                        if (shooterMotor.getSelectedSensorVelocity() >= 1.0) {// Change 1.0 to acutal velocity when known
+                          conveyorMotor.set(1.0);
+                          if (controller.getXButton() && !inGate_BB.get() && !midGate_BB.get() && !shooter_BB.get()) { //shooter runs when x is pushed and continues until x is pushed again. Do not hit x again until conveyor is empty
+                            conveyorState = "intake1";
+                          }
+                        }
+            break;
+
+            case "Ejectball1": 
               intakePneumatic.set(Value.kForward);
               conveyorMotor.set(-1.0);
               centerMotor.set(-1.0);
               rollerMotor.set(-1.0);
+              if (!inGate_BB.get() && !midGate_BB.get() && !shooter_BB.get()) { //shooter runs when x is pushed and continues until x is pushed again. Do not hit x again until conveyor is empty
+                conveyorState = "intake1";
+              }
             break;
 
-            case "Eject2":
+            case "Ejectball2a":
+              intakePneumatic.set(Value.kForward);
+              conveyorMotor.set(-1.0);
+              centerMotor.set(-1.0);
+              rollerMotor.set(-1.0);
+              if (inGate_BB.get()) {
+                conveyorState = "Ejectball2b";
+              }
+            break;
+
+            case "EjectBall2b":
+              intakePneumatic.set(Value.kForward);
+              conveyorMotor.set(-1.0);
+              centerMotor.set(-1.0);
+              rollerMotor.set(-1.0);
+              if (!inGate_BB.get()) {
+                conveyorState = "intake2";
+              }
+
+            case "emergencyClear":
+              intakePneumatic.set(Value.kForward);
+              conveyorMotor.set(-1.0);
+              centerMotor.set(-1.0);
+              rollerMotor.set(-1.0);
+              shooterMotor.set(0.0);
+              if (!inGate_BB.get() && !midGate_BB.get() && !shooter_BB.get()) { //shooter runs when x is pushed and continues until x is pushed again. Do not hit x again until conveyor is empty
+                conveyorState = "intake1";
+              }
             break;
       }
-
+          //barf button
+            if (controller.getLeftBumper() && controller.getRightBumper()) {
+              conveyorState = "emergencyClear";
+            }
 
     }
 
