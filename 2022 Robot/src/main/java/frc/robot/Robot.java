@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -44,8 +45,8 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
  * project.
  */
 public class Robot extends TimedRobot {
-  private static final String kDefaultAuto = "Default";
-  private static final String kCustomAuto = "My Auto";
+  private static final String k_taxiAuto = "Taxi Auto";
+  private static final String k_ballShootingAuto = "Ball Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
@@ -57,6 +58,10 @@ public class Robot extends TimedRobot {
 
   //Color String
   String colorString;
+
+  //Timer
+  Timer ShooterTimer;
+  
 
   //Drive Train
     //Drive: 4 Falcon motors with integrated motor controllers
@@ -122,8 +127,8 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_chooser.addOption("My Auto", kCustomAuto);
+    m_chooser.setDefaultOption("Taxi Auto", k_taxiAuto);
+    m_chooser.addOption("Ball Auto", k_ballShootingAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
 
     m_colorMatcher.addColorMatch(kBlueTarget);
@@ -216,6 +221,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void autonomousInit() {
+    ShooterTimer.reset();
     m_autoSelected = m_chooser.getSelected();
     // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
     System.out.println("Auto selected: " + m_autoSelected);
@@ -228,15 +234,66 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousPeriodic() {
     switch (m_autoSelected) {
-      case kCustomAuto:
-        // Put custom auto code here
+      
+      case k_taxiAuto:
+       // taxi autonomous
+         LeftFront.set(1.0); //depending on what direction the robot is facing negative or positive
+         LeftRear.set(1.0);
+         RightFront.set(1.0);
+         RightRear.set(1.0);
+         if (LeftFront.getSelectedSensorPosition() >= 1.0) { //change 1.0 to proper value
+          m_autoSelected = "autoEnd";
+         }
+        break;
 
-        // taxi autonomous
+        case "autoEnd":
+        LeftFront.set(0.0);
+        LeftRear.set(0.0);
+        RightFront.set(0.0);
+        RightRear.set(0.0);
+        shooterMotor.set(ControlMode.Velocity, 0.0);
+        conveyorMotor.set(0.0);
         break;
-      case kDefaultAuto:
-      default:
-        // Put default auto code here
-        break;
+
+      case k_ballShootingAuto:
+         //drive to the goal
+         LeftFront.set(1.0); //depending on what direction the robot is facing negative or positive
+         LeftRear.set(1.0);
+         RightFront.set(1.0);
+         RightRear.set(1.0);
+         shooterMotor.set(ControlMode.Velocity, 1.0); //change 1.0 to actual shooter velocity 100%
+         if (LeftFront.getSelectedSensorPosition() >= 1.0) { //change 1.0 to proper value
+          m_autoSelected = "FireFireFire";
+         }
+         //move through states to shoot
+         //back out of taxi area
+      break;
+
+      case "FireFireFire":
+      ShooterTimer.start();
+      //if falcon is up to speed
+      shooterMotor.set(ControlMode.Velocity, 1.0); //Change 1.0 to actual velocity when known
+      shooterMotor.getSelectedSensorVelocity(); 
+      if (shooterMotor.getSelectedSensorVelocity() >= 1.0) {// Change 1.0 to acutal velocity when known
+        conveyorMotor.set(1.0);
+        if (ShooterTimer.get() > 3.0) { //shooter runs until empty. Change 3 to proper length
+          m_autoSelected = "reverseTaxi2";
+        }
+      }
+      break;
+
+      case "reverseTaxi2":
+      LeftFront.set(1.0); //depending on what direction the robot is facing negative or positive
+      LeftRear.set(1.0);
+      RightFront.set(1.0);
+      RightRear.set(1.0);
+      shooterMotor.set(ControlMode.Velocity, 0.0);
+      conveyorMotor.set(0.0);
+      if (LeftFront.getSelectedSensorPosition() >= 1.0) { //change 1.0 to proper value
+       m_autoSelected = "autoEnd";
+      }
+      break;
+
     }
   }
 
@@ -465,7 +522,7 @@ public class Robot extends TimedRobot {
               conveyorMotor.set(-1.0);
               centerMotor.set(-1.0);
               rollerMotor.set(-1.0);
-              shooterMotor.set(0.0);
+              shooterMotor.set(ControlMode.Velocity, 0.0);
               if (!inGate_BB.get() && !midGate_BB.get() && !shooter_BB.get()) { //shooter runs when x is pushed and continues until x is pushed again. Do not hit x again until conveyor is empty
                 conveyorState = "intake1";
               }
