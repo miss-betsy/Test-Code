@@ -332,7 +332,7 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     //Drivetrain Control
-    /* Gamepad processing */
+    /* Gamepad processing */                 
 		double forward = -1.0 * controller.getLeftY();
 		double turn = controller.getRightX();		
 		forward = Deadband(forward);
@@ -340,8 +340,8 @@ public class Robot extends TimedRobot {
 
 		/* Arcade Drive using PercentOutput along with Arbitrary Feed Forward supplied by turn */
 		LeftFront.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, +turn);
-		LeftRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
-    RightFront.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, +turn);
+		LeftRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, +turn);
+    RightFront.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
 		RightRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
 
   //Conveyor Control
@@ -384,7 +384,7 @@ public class Robot extends TimedRobot {
               if (!inGate_BB.get()) {
                 conveyorState = "Judgecolor1";
               }
-            break;
+            break; 
             
             case "Judgecolor1": 
             //stop conveyor
