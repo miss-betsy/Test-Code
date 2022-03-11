@@ -117,10 +117,20 @@ public class Robot extends TimedRobot {
 
         
   //Shooter: Falcon
-    TalonSRX shooterMotor = new TalonSRX(4);
+    WPI_TalonFX shooterMotor = new WPI_TalonFX(4, "rio");
 
     //convayer states
-    String conveyorState = "intake1";
+    //String conveyorState = "intake1";
+
+  //Climber
+
+    //Clamps
+     DoubleSolenoid clampPneumatic = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 2, 3);
+    //Hooks - Reach
+      DoubleSolenoid pneumaticreach = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 4, 5);
+    //Hooks - Tilt
+      DoubleSolenoid pneumatictilt = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 6, 7);
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -308,24 +318,28 @@ public class Robot extends TimedRobot {
     LeftRear.set(ControlMode.PercentOutput, 0);
     RightFront.set(ControlMode.PercentOutput, 0);
     RightRear.set(ControlMode.PercentOutput, 0);
+    shooterMotor.set(ControlMode.PercentOutput, 0);
 
 /* Factory Default all hardware to prevent unexpected behaviour */
     LeftFront.configFactoryDefault();
     LeftRear.configFactoryDefault();
     RightFront.configFactoryDefault();
     RightRear.configFactoryDefault();
+    shooterMotor.configFactoryDefault();
 
 /* Set Neutral mode */
-    LeftFront.setNeutralMode(NeutralMode.Brake);
-    LeftRear.setNeutralMode(NeutralMode.Brake);
-    RightFront.setNeutralMode(NeutralMode.Brake);
-    RightRear.setNeutralMode(NeutralMode.Brake);
+    LeftFront.setNeutralMode(NeutralMode.Coast);
+    LeftRear.setNeutralMode(NeutralMode.Coast);
+    RightFront.setNeutralMode(NeutralMode.Coast);
+    RightRear.setNeutralMode(NeutralMode.Coast);
+    shooterMotor.setNeutralMode(NeutralMode.Coast);
 
 /* Configure output direction */
     LeftFront.setInverted(TalonFXInvertType.CounterClockwise);
     LeftRear.setInverted(TalonFXInvertType.CounterClockwise);
     RightFront.setInverted(TalonFXInvertType.Clockwise);
     RightRear.setInverted(TalonFXInvertType.Clockwise);
+    shooterMotor.setInverted(TalonFXInvertType.Clockwise);
   }
 
   /** This function is called periodically during operator control. */
@@ -344,8 +358,44 @@ public class Robot extends TimedRobot {
     RightFront.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
 		RightRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
 
+//Climber Control
+    if (controller.getPOV() == 180) {
+      pneumaticreach.set(Value.kForward); //up on dpad extends hooks
+    }
+    if (controller.getPOV() == 0) {
+      pneumaticreach.set(Value.kReverse); //down on dpad retracts hooks
+    }
+    if (controller.getPOV() == 90) {
+      pneumatictilt.set(Value.kForward); // right leans hooks back
+    }
+    if (controller.getPOV() == 270) {
+      pneumatictilt.set(Value.kReverse); //left brings hooks back upright
+    }
+    if (controller.getRawButtonPressed(7) && controller.getRawButtonPressed(8)) {
+      clampPneumatic.set(Value.kReverse);  //back and start open clamps
+    }
+    if (controller.getYButton()) {
+      clampPneumatic.set(Value.kForward); //Y closes clamps remove
+      }
+    if (controller.getAButton()) {//a button intake
+      rollerMotor.set(1.0);
+    }
+    if (controller.getBButton()) { //B button conveyor up
+      conveyorMotor.set(1.0);
+    }
+    if (controller.getXButton()) { // X button shoot
+      shooterMotor.set(ControlMode.Velocity, 100);
+    }
+    if (controller.getLeftBumper()) { // left bumper poke
+      intakePneumatic.set(Value.kForward);
+    }
+    if (controller.getRightBumper()) {  // right bumper un-poke
+      intakePneumatic.set(Value.kReverse);
+    }
+  }
+
   //Conveyor Control
-  
+  /** 
       switch (conveyorState) {
             case "intake1": //what will execute while conveyor is empty
                 //Intake control
@@ -532,8 +582,8 @@ public class Robot extends TimedRobot {
             if (controller.getLeftBumper() && controller.getRightBumper()) {
               conveyorState = "emergencyClear";
             }
-
     }
+*/
 
 	/** Deadband 5 percent, used on the gamepad */
 	double Deadband(double value) {
