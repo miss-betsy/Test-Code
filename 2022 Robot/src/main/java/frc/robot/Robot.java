@@ -409,10 +409,10 @@ public class Robot extends TimedRobot {
     if (controller.getLeftBumperReleased()) { //let go of left bumper stop roller motor
       rollerMotor.set(0.0);
     }
-    if (controller.getLeftBumperPressed() && controller.getBButtonPressed()) { //left bumper + back barf
+    if (controller.getLeftBumperPressed() && controller.getRawButtonPressed(2)) { //left bumper + back barf
       rollerMotor.set(1.0);
     }
-    if (controller.getLeftBumperReleased() && controller.getBButtonReleased()) { //let go of left bumper + back barf stop
+    if (controller.getLeftBumperReleased() && controller.getRawButtonReleased(2)) { //let go of left bumper + back barf stop
       rollerMotor.set(0.0);
     }
    // if (controller.getLeftTriggerAxis(0.5)) {//left trigger runs intake in reverse
@@ -427,10 +427,10 @@ public class Robot extends TimedRobot {
     if (controller.getRightBumperReleased()) { //let go of right bumper conveyor off
       conveyorMotor.set(0.0);
     }
-    if (controller.getRightBumperPressed() && controller.getBButtonPressed()) {  // right bumper + back conveyor out
+    if (controller.getRightBumperPressed() && controller.getRawButtonPressed(2)) {  // right bumper + back conveyor out
       conveyorMotor.set(-0.3);
     }
-    if (controller.getRightBumperReleased() && controller.getBButtonReleased()) { //let go of right bumper + back conveyor out off
+    if (controller.getRightBumperReleased() && controller.getRawButtonReleased(2)) { //let go of right bumper + back conveyor out off
       conveyorMotor.set(0.0);
     }
     //if (controller.getRightTriggerAxis()) {
