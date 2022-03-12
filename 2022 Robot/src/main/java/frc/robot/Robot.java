@@ -23,7 +23,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 //import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+//import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 //import com.ctre.phoenix.motorcontrol.can.TalonSRX;
@@ -386,11 +386,12 @@ public class Robot extends TimedRobot {
     if (controller.getYButton()) {
       clampPneumatic.set(Value.kForward); //Y closes clamps remove
       }
-    //if (controller.getAButtonPressed()) {//a button intake
-    //}
-    //if (controller.getAButtonReleased()) {
-      //rollerMotor.set(0.0);
-    //}
+    if (controller.getAButtonPressed()) {//a button centermotor
+      centerMotor.set(-1.0);
+    }
+    if (controller.getAButtonReleased()) {
+      centerMotor.set(0.0);
+    }
     if (controller.getRawButtonPressed(2)) { //B poke
       intakePneumatic.set(Value.kForward);
     }
@@ -409,12 +410,36 @@ public class Robot extends TimedRobot {
     if (controller.getLeftBumperReleased()) { //let go of left bumper stop roller motor
       rollerMotor.set(0.0);
     }
+    if (controller.getLeftBumperPressed() && controller.getRawButtonPressed(7)) { //left bumper + back barf
+      rollerMotor.set(1.0);
+    }
+    if (controller.getLeftBumperReleased() && controller.getRawButtonPressed(7)) { //let go of left bumper + back barf stop
+      rollerMotor.set(0.0);
+    }
+   // if (controller.getLeftTriggerAxis(0.5)) {//left trigger runs intake in reverse
+    //  rollerMotor.set(1.0);
+    //}
+    //if (controller.getLeftTriggerAxis(0) {//let go of trigger to stop
+   //   rollerMotor.set(0.0);
+   // }
     if (controller.getRightBumperPressed()) {  // right bumper conveyor on
       conveyorMotor.set(-0.3);
     }
     if (controller.getRightBumperReleased()) { //let go of right bumper conveyor off
       conveyorMotor.set(0.0);
     }
+    if (controller.getRightBumperPressed() && controller.getRawButtonPressed(7)) {  // right bumper + back conveyor out
+      conveyorMotor.set(-0.3);
+    }
+    if (controller.getRightBumperReleased() && controller.getRawButtonPressed(7)) { //let go of right bumper + back conveyor out off
+      conveyorMotor.set(0.0);
+    }
+    //if (controller.getRightTriggerAxis()) {
+     // conveyorMotor.set(1.0);
+    //}
+    //if (controller.getRightTriggerAxis()) {
+     // conveyorMotor.set(0.0)
+    //}
   }
 
   //Conveyor Control
