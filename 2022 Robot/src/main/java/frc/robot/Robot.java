@@ -76,9 +76,6 @@ public class Robot extends TimedRobot {
 
   //Intake
 
-      //Pivot: Up/Down - Air: Double Acting Solenoid and Piston
-        DoubleSolenoid intakePneumatic = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
-
       //Roller Drive: In/Out - Spark Max and Neo
         CANSparkMax rollerMotor = new CANSparkMax(5, MotorType.kBrushless);
 
@@ -120,7 +117,7 @@ public class Robot extends TimedRobot {
     WPI_TalonFX shooterMotor = new WPI_TalonFX(8, "rio");
 
     //convayer states
-    //String conveyorState = "intake1"; 
+    String conveyorState = "intake1"; 
 
   //Climber
 
@@ -384,50 +381,44 @@ public class Robot extends TimedRobot {
     }
     if (controller.getYButton()) {
       clampPneumatic.set(Value.kForward); //Y closes clamps remove
-      }
+    }
     if (controller.getAButtonPressed()) {//a button centermotor
       centerMotor.set(-0.5);
     }
     if (controller.getAButtonReleased()) {
       centerMotor.set(0.0);
     }
-    if (controller.getRawButtonPressed(2)) { //B poke
-      intakePneumatic.set(Value.kForward);
-    }
-    if (controller.getRawButtonReleased(2)) { // let go of b unpoke
-      intakePneumatic.set(Value.kReverse);
-    }
+
     if (controller.getRawButtonPressed(3)) { // X button shoot
       shooterMotor.set(ControlMode.PercentOutput, 0.84);
     }
     if (controller.getRawButtonReleased(3)) { // let go of x stop shooter
       shooterMotor.set(ControlMode.PercentOutput, 0.0);
     }
-    if (controller.getLeftBumperPressed() && controller.getRawButtonPressed(2)) { //left bumper + back barf
-      rollerMotor.set(1.0);
-    }
-    if (controller.getLeftBumperReleased() && controller.getRawButtonReleased(2)) { //let go of left bumper + back barf stop
-      rollerMotor.set(0.0);
-    }
+      //if (controller.getLeftBumperPressed() && controller.getRawButtonPressed(2)) { //left bumper + back barf
+      // rollerMotor.set(1.0);
+      //} 
+      //if (controller.getLeftBumperReleased() && controller.getRawButtonReleased(2)) { //let go of left bumper + back barf stop
+      //  rollerMotor.set(0.0);
+      //}
     if (controller.getLeftBumperPressed()) { //left bumper intake
       rollerMotor.set(-1.0);
     }
     if (controller.getLeftBumperReleased()) { //let go of left bumper stop roller motor
       rollerMotor.set(0.0);
     }
-
-   // if (controller.getLeftTriggerAxis(0.5)) {//left trigger runs intake in reverse
-    //  rollerMotor.set(1.0);
-    //}
-    //if (controller.getLeftTriggerAxis(0) {//let go of trigger to stop
-   //   rollerMotor.set(0.0);
-   // }
-   if (controller.getRightBumperPressed() && controller.getRawButtonPressed(2)) {  // right bumper + back conveyor out
-    conveyorMotor.set(-0.3);
-  }
-  if (controller.getRightBumperReleased() && controller.getRawButtonReleased(2)) { //let go of right bumper + back conveyor out off
-    conveyorMotor.set(0.0);
-  }
+      // if (controller.getLeftTriggerAxis(0.5)) {//left trigger runs intake in reverse
+      //  rollerMotor.set(1.0);
+      //}
+      //if (controller.getLeftTriggerAxis(0) {//let go of trigger to stop
+      //  rollerMotor.set(0.0);
+      //}
+      //if (controller.getRightBumperPressed() && controller.getRawButtonPressed(2)) {  // right bumper + back conveyor out
+      //  conveyorMotor.set(-0.3);
+      //}
+      //if (controller.getRightBumperReleased() && controller.getRawButtonReleased(2)) { //let go of right bumper + back conveyor out off
+      //  conveyorMotor.set(0.0);
+      //}
     if (controller.getRightBumperPressed()) {  // right bumper conveyor on
       conveyorMotor.set(-0.3);
     }
@@ -443,24 +434,23 @@ public class Robot extends TimedRobot {
     //}
   }
 
-  //Conveyor Control
-  /** 
+  
+  //Conveyor Control 
+  /*
       switch (conveyorState) {
             case "intake1": //what will execute while conveyor is empty
                 //Intake control
                  //If the left bumper button on the controller is pressed the intake is down(forward), 
                   //else it isn't pressed the intake is up(reverse)
                   if (controller.getLeftBumper()){
-                    intakePneumatic.set(Value.kForward);
                   if (controller.getAButton()){
-                    rollerMotor.set(-1.0); //if they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
-                    centerMotor.set(-1.0);
-                  } else {
-                    rollerMotor.set(1.0);
+                    rollerMotor.set(1.0); //if they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
                     centerMotor.set(1.0);
+                  } else {
+                    rollerMotor.set(-1.0);
+                    centerMotor.set(-1.0);
                   }
                   } else {
-                    intakePneumatic.set(Value.kReverse);
                     rollerMotor.set(0.0);
                     centerMotor.set(0.0);
                   }
@@ -472,12 +462,11 @@ public class Robot extends TimedRobot {
             break;
             
             case "move2color1": 
-              //lift intake and stop roller motor
-              intakePneumatic.set(Value.kReverse);
+              //stop roller motor
               rollerMotor.set(0.0);
 
               //run conveyor
-              conveyorMotor.set(1.0);
+              conveyorMotor.set(-1.0);
 
               //if not in gate
               if (!inGate_BB.get()) {
@@ -510,7 +499,7 @@ public class Robot extends TimedRobot {
                   //If the left bumper button on the controller is pressed the intake is down(forward), 
                   //else it isn't pressed the intake is up(reverse)
                   if (controller.getLeftBumper()){ //take pneumatics completely out if actuation is removed to avoid if statment issues
-                    intakePneumatic.set(Value.kForward);
+;
                   if (controller.getAButton()){
                     rollerMotor.set(-1.0); //if they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
                     centerMotor.set(-1.0);
@@ -519,7 +508,6 @@ public class Robot extends TimedRobot {
                     centerMotor.set(1.0);
                   }
                   } else {
-                    intakePneumatic.set(Value.kReverse);
                     rollerMotor.set(0.0);
                     centerMotor.set(0.0);
                   }
@@ -535,7 +523,6 @@ public class Robot extends TimedRobot {
             
             case "move2Color2": 
               //lift intake and stop roller motor
-              intakePneumatic.set(Value.kReverse);
               rollerMotor.set(0.0);
 
               //run conveyor
@@ -588,7 +575,6 @@ public class Robot extends TimedRobot {
             break;
 
             case "Ejectball1": 
-              intakePneumatic.set(Value.kForward);
               conveyorMotor.set(-1.0);
               centerMotor.set(-1.0);
               rollerMotor.set(-1.0);
@@ -598,7 +584,6 @@ public class Robot extends TimedRobot {
             break;
 
             case "Ejectball2a":
-              intakePneumatic.set(Value.kForward);
               conveyorMotor.set(-1.0);
               centerMotor.set(-1.0);
               rollerMotor.set(-1.0);
@@ -608,7 +593,6 @@ public class Robot extends TimedRobot {
             break;
 
             case "EjectBall2b":
-              intakePneumatic.set(Value.kForward);
               conveyorMotor.set(-1.0);
               centerMotor.set(-1.0);
               rollerMotor.set(-1.0);
@@ -617,7 +601,6 @@ public class Robot extends TimedRobot {
               }
 
             case "emergencyClear":
-              intakePneumatic.set(Value.kForward);
               conveyorMotor.set(-1.0);
               centerMotor.set(-1.0);
               rollerMotor.set(-1.0);
@@ -633,15 +616,14 @@ public class Robot extends TimedRobot {
             }
     }
 */
-
 	/** Deadband 5 percent, used on the gamepad */
 	double Deadband(double value) {
 		/* Upper deadband */
-		if (value >= +0.05) 
+		if (value >= +0.06) 
 			return value;
-		
+		  
 		/* Lower deadband */
-		if (value <= -0.05)
+		if (value <= -0.06)
 			return value;
 		
 		/* Outside deadband */ 
