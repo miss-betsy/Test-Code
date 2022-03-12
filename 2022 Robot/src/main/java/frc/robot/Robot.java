@@ -386,7 +386,7 @@ public class Robot extends TimedRobot {
       clampPneumatic.set(Value.kForward); //Y closes clamps remove
       }
     if (controller.getAButtonPressed()) {//a button centermotor
-      centerMotor.set(-1.0);
+      centerMotor.set(-0.5);
     }
     if (controller.getAButtonReleased()) {
       centerMotor.set(0.0);
