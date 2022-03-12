@@ -319,7 +319,7 @@ public class Robot extends TimedRobot {
     LeftRear.set(ControlMode.PercentOutput, 0);
     RightFront.set(ControlMode.PercentOutput, 0);
     RightRear.set(ControlMode.PercentOutput, 0);
-    shooterMotor.set(ControlMode.PercentOutput, 0);
+    shooterMotor.set(ControlMode.Velocity, 0);
 
 /* Factory Default all hardware to prevent unexpected behaviour */
     LeftFront.configFactoryDefault();
@@ -335,6 +335,8 @@ public class Robot extends TimedRobot {
     RightRear.setNeutralMode(NeutralMode.Coast);
     shooterMotor.setNeutralMode(NeutralMode.Coast);
 
+    shooterMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+
 /* Configure output direction */
     LeftFront.setInverted(TalonFXInvertType.CounterClockwise);
     LeftRear.setInverted(TalonFXInvertType.CounterClockwise);
@@ -343,8 +345,8 @@ public class Robot extends TimedRobot {
     shooterMotor.setInverted(TalonFXInvertType.CounterClockwise);
 
 /* Set Sensor Phase */
-    shooterMotor.setSensorPhase(true);
-    shooterMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
+    //shooterMotor.setSensorPhase(true);
+    //shooterMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
   }
 
   /** This function is called periodically during operator control. */
@@ -383,19 +385,19 @@ public class Robot extends TimedRobot {
       clampPneumatic.set(Value.kForward); //Y closes clamps remove
       }
     if (controller.getAButtonPressed()) {//a button intake
-      rollerMotor.set(1.0);
+      rollerMotor.set(-1.0);
     }
     if (controller.getAButtonReleased()) {
       rollerMotor.set(0.0);
     }
     if (controller.getRawButtonPressed(2)) { //B button conveyor up
-      conveyorMotor.set(1.0);
+      conveyorMotor.set(-0.3);
     }
     if (controller.getRawButtonReleased(2)) {
       conveyorMotor.set(0.0);
     }
     if (controller.getRawButtonPressed(3)) { // X button shoot
-      shooterMotor.set(ControlMode.Velocity, 1000.0);
+      shooterMotor.set(ControlMode.Velocity, 6100.0);
     }
     if (controller.getRawButtonReleased(3)) {
       shooterMotor.set(ControlMode.Velocity, 0.0);
