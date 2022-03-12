@@ -25,9 +25,9 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+//import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
-import com.fasterxml.jackson.databind.introspect.TypeResolutionContext.Empty;
+//import com.fasterxml.jackson.databind.introspect.TypeResolutionContext.Empty;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorMatchResult;
@@ -69,7 +69,7 @@ public class Robot extends TimedRobot {
     //Rio tells it that the system is the Rio, every other system will ignore
     WPI_TalonFX LeftFront = new WPI_TalonFX(1, "rio");
     WPI_TalonFX LeftRear = new WPI_TalonFX(3, "rio");
-    WPI_TalonFX RightFront = new WPI_TalonFX(0, "rio");
+    WPI_TalonFX RightFront = new WPI_TalonFX(4, "rio");
     WPI_TalonFX RightRear = new WPI_TalonFX(2, "rio");
 
 //Cargo Handling
@@ -80,21 +80,21 @@ public class Robot extends TimedRobot {
         DoubleSolenoid intakePneumatic = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
 
       //Roller Drive: In/Out - Spark Max and Neo
-        CANSparkMax rollerMotor = new CANSparkMax(1, MotorType.kBrushless);
+        CANSparkMax rollerMotor = new CANSparkMax(5, MotorType.kBrushless);
 
       //Sensors: Intgrated hall effect for motor speed
 
   //Centering
 
       //Left and Right: Center/Eject - Spark Max and Neo
-        CANSparkMax centerMotor = new CANSparkMax(2, MotorType.kBrushless);
+        CANSparkMax centerMotor = new CANSparkMax(6, MotorType.kBrushless);
 
       //Sensors: Integrated hall effect for motor speed
 
   // Conveyor
 
       //Inside robot: Up/down - Spark Max and Neo
-        CANSparkMax conveyorMotor = new CANSparkMax(3, MotorType.kBrushless);
+        CANSparkMax conveyorMotor = new CANSparkMax(7, MotorType.kBrushless);
 
       //Sensors: Integrated hall effect for motor speed +
 
@@ -117,10 +117,10 @@ public class Robot extends TimedRobot {
 
         
   //Shooter: Falcon
-    WPI_TalonFX shooterMotor = new WPI_TalonFX(4, "rio");
+    WPI_TalonFX shooterMotor = new WPI_TalonFX(8, "rio");
 
     //convayer states
-    //String conveyorState = "intake1";
+    //String conveyorState = "intake1"; 
 
   //Climber
 
@@ -347,8 +347,8 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     //Drivetrain Control
     /* Gamepad processing */                 
-		double forward = -1.0 * controller.getLeftY();
-		double turn = controller.getRightX();		
+		double forward = -1.0 * Math.pow(controller.getLeftY(), 2.0);
+		double turn = Math.pow(controller.getRightX(), 2.0);		
 		forward = Deadband(forward);
 		turn = Deadband(turn);
 
@@ -367,7 +367,7 @@ public class Robot extends TimedRobot {
     }
     if (controller.getPOV() == 90) {
       pneumatictilt.set(Value.kForward); // right leans hooks back
-    }
+    }                              
     if (controller.getPOV() == 270) {
       pneumatictilt.set(Value.kReverse); //left brings hooks back upright
     }
@@ -377,14 +377,23 @@ public class Robot extends TimedRobot {
     if (controller.getYButton()) {
       clampPneumatic.set(Value.kForward); //Y closes clamps remove
       }
-    if (controller.getAButton()) {//a button intake
+    if (controller.getAButtonPressed()) {//a button intake
       rollerMotor.set(1.0);
     }
-    if (controller.getBButton()) { //B button conveyor up
+    if (controller.getAButtonReleased()) {
+      rollerMotor.set(0.0);
+    }
+    if (controller.getRawButtonPressed(2)) { //B button conveyor up
       conveyorMotor.set(1.0);
     }
-    if (controller.getXButton()) { // X button shoot
+    if (controller.getRawButtonReleased(2)) {
+      conveyorMotor.set(0.0);
+    }
+    if (controller.getRawButtonPressed(3)) { // X button shoot
       shooterMotor.set(ControlMode.Velocity, 100);
+    }
+    if (controller.getRawButtonReleased(3)) {
+      shooterMotor.set(ControlMode.Velocity, 0);
     }
     if (controller.getLeftBumper()) { // left bumper poke
       intakePneumatic.set(Value.kForward);
