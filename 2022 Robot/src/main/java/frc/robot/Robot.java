@@ -364,10 +364,10 @@ public class Robot extends TimedRobot {
 		RightRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
 
 //Climber Control
-    if (controller.getPOV() == 180) {
+    if (controller.getPOV() == 0) {
       pneumaticreach.set(Value.kForward); //up on dpad extends hooks
     }
-    if (controller.getPOV() == 0) {
+    if (controller.getPOV() == 180) {
       pneumaticreach.set(Value.kReverse); //down on dpad retracts hooks
     }
     if (controller.getPOV() == 90) {
@@ -376,18 +376,13 @@ public class Robot extends TimedRobot {
     if (controller.getPOV() == 270) {
       pneumatictilt.set(Value.kReverse); //left brings hooks back upright
     }
-    if (controller.getRawButtonPressed(7) && controller.getRawButtonPressed(7)) {
-      clampPneumatic.set(Value.kReverse);  //back and start open clamps
+    if (controller.getRawButtonPressed(7) && controller.getRawButtonPressed(8)) {
+      clampPneumatic.set(Value.kForward);  //back and start open clamps
     }
     if (controller.getYButton()) {
-      clampPneumatic.set(Value.kForward); //Y closes clamps remove
+      clampPneumatic.set(Value.kReverse); //Y closes clamps remove
     }
-    if (controller.getAButtonPressed()) {//a button centermotor
-      centerMotor.set(-0.5);
-    }
-    if (controller.getAButtonReleased()) {
-      centerMotor.set(0.0);
-    }
+    
 
     if (controller.getRawButtonPressed(3)) { // X button shoot
       shooterMotor.set(ControlMode.PercentOutput, 0.84);
@@ -403,9 +398,11 @@ public class Robot extends TimedRobot {
       //}
     if (controller.getLeftBumperPressed()) { //left bumper intake
       rollerMotor.set(-1.0);
+      centerMotor.set(-0.5);
     }
     if (controller.getLeftBumperReleased()) { //let go of left bumper stop roller motor
       rollerMotor.set(0.0);
+      centerMotor.set(0.0);
     }
       // if (controller.getLeftTriggerAxis(0.5)) {//left trigger runs intake in reverse
       //  rollerMotor.set(1.0);
