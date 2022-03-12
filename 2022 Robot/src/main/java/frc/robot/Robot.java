@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 //import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 //import com.ctre.phoenix.motorcontrol.can.TalonSRX;
@@ -339,7 +340,11 @@ public class Robot extends TimedRobot {
     LeftRear.setInverted(TalonFXInvertType.CounterClockwise);
     RightFront.setInverted(TalonFXInvertType.Clockwise);
     RightRear.setInverted(TalonFXInvertType.Clockwise);
-    shooterMotor.setInverted(TalonFXInvertType.Clockwise);
+    shooterMotor.setInverted(TalonFXInvertType.CounterClockwise);
+
+/* Set Sensor Phase */
+    shooterMotor.setSensorPhase(true);
+    shooterMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
   }
 
   /** This function is called periodically during operator control. */
@@ -390,10 +395,10 @@ public class Robot extends TimedRobot {
       conveyorMotor.set(0.0);
     }
     if (controller.getRawButtonPressed(3)) { // X button shoot
-      shooterMotor.set(ControlMode.Velocity, 100);
+      shooterMotor.set(ControlMode.Velocity, 1000.0);
     }
     if (controller.getRawButtonReleased(3)) {
-      shooterMotor.set(ControlMode.Velocity, 0);
+      shooterMotor.set(ControlMode.Velocity, 0.0);
     }
     if (controller.getLeftBumper()) { // left bumper poke
       intakePneumatic.set(Value.kForward);
