@@ -403,36 +403,38 @@ public class Robot extends TimedRobot {
     if (controller.getRawButtonReleased(3)) { // let go of x stop shooter
       shooterMotor.set(ControlMode.PercentOutput, 0.0);
     }
-    if (controller.getLeftBumperPressed()) { //left bumper intake
-      rollerMotor.set(-1.0);
-    }
-    if (controller.getLeftBumperReleased()) { //let go of left bumper stop roller motor
-      rollerMotor.set(0.0);
-    }
     if (controller.getLeftBumperPressed() && controller.getRawButtonPressed(2)) { //left bumper + back barf
       rollerMotor.set(1.0);
     }
     if (controller.getLeftBumperReleased() && controller.getRawButtonReleased(2)) { //let go of left bumper + back barf stop
       rollerMotor.set(0.0);
     }
+    if (controller.getLeftBumperPressed()) { //left bumper intake
+      rollerMotor.set(-1.0);
+    }
+    if (controller.getLeftBumperReleased()) { //let go of left bumper stop roller motor
+      rollerMotor.set(0.0);
+    }
+
    // if (controller.getLeftTriggerAxis(0.5)) {//left trigger runs intake in reverse
     //  rollerMotor.set(1.0);
     //}
     //if (controller.getLeftTriggerAxis(0) {//let go of trigger to stop
    //   rollerMotor.set(0.0);
    // }
+   if (controller.getRightBumperPressed() && controller.getRawButtonPressed(2)) {  // right bumper + back conveyor out
+    conveyorMotor.set(-0.3);
+  }
+  if (controller.getRightBumperReleased() && controller.getRawButtonReleased(2)) { //let go of right bumper + back conveyor out off
+    conveyorMotor.set(0.0);
+  }
     if (controller.getRightBumperPressed()) {  // right bumper conveyor on
       conveyorMotor.set(-0.3);
     }
     if (controller.getRightBumperReleased()) { //let go of right bumper conveyor off
       conveyorMotor.set(0.0);
     }
-    if (controller.getRightBumperPressed() && controller.getRawButtonPressed(2)) {  // right bumper + back conveyor out
-      conveyorMotor.set(-0.3);
-    }
-    if (controller.getRightBumperReleased() && controller.getRawButtonReleased(2)) { //let go of right bumper + back conveyor out off
-      conveyorMotor.set(0.0);
-    }
+
     //if (controller.getRightTriggerAxis()) {
      // conveyorMotor.set(1.0);
     //}
