@@ -319,7 +319,7 @@ public class Robot extends TimedRobot {
     LeftRear.set(ControlMode.PercentOutput, 0);
     RightFront.set(ControlMode.PercentOutput, 0);
     RightRear.set(ControlMode.PercentOutput, 0);
-    shooterMotor.set(ControlMode.Velocity, 0);
+    shooterMotor.set(ControlMode.PercentOutput, 0);
 
 /* Factory Default all hardware to prevent unexpected behaviour */
     LeftFront.configFactoryDefault();
@@ -335,7 +335,7 @@ public class Robot extends TimedRobot {
     RightRear.setNeutralMode(NeutralMode.Coast);
     shooterMotor.setNeutralMode(NeutralMode.Coast);
 
-    shooterMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
+    //shooterMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
 
 /* Configure output direction */
     LeftFront.setInverted(TalonFXInvertType.CounterClockwise);
@@ -354,8 +354,10 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     //Drivetrain Control
     /* Gamepad processing */                 
-		double forward = -1.0 * Math.pow(controller.getLeftY(), 2.0);
-		double turn = Math.pow(controller.getRightX(), 2.0);		
+		//double forward = -1.0 * Math.pow(controller.getLeftY(), 2.0);
+		//double turn = Math.pow(controller.getRightX(), 2.0);
+    double forward = -1.0 * controller.getLeftY();
+		double turn = controller.getRightX();		
 		forward = Deadband(forward);
 		turn = Deadband(turn);
 
@@ -384,29 +386,34 @@ public class Robot extends TimedRobot {
     if (controller.getYButton()) {
       clampPneumatic.set(Value.kForward); //Y closes clamps remove
       }
-    if (controller.getAButtonPressed()) {//a button intake
-      rollerMotor.set(-1.0);
-    }
-    if (controller.getAButtonReleased()) {
-      rollerMotor.set(0.0);
-    }
-    if (controller.getRawButtonPressed(2)) { //B button conveyor up
-      conveyorMotor.set(-0.3);
-    }
-    if (controller.getRawButtonReleased(2)) {
-      conveyorMotor.set(0.0);
-    }
-    if (controller.getRawButtonPressed(3)) { // X button shoot
-      shooterMotor.set(ControlMode.Velocity, 6100.0);
-    }
-    if (controller.getRawButtonReleased(3)) {
-      shooterMotor.set(ControlMode.Velocity, 0.0);
-    }
-    if (controller.getLeftBumper()) { // left bumper poke
+    //if (controller.getAButtonPressed()) {//a button intake
+    //}
+    //if (controller.getAButtonReleased()) {
+      //rollerMotor.set(0.0);
+    //}
+    if (controller.getRawButtonPressed(2)) { //B poke
       intakePneumatic.set(Value.kForward);
     }
-    if (controller.getRightBumper()) {  // right bumper un-poke
+    if (controller.getRawButtonReleased(2)) { // let go of b unpoke
       intakePneumatic.set(Value.kReverse);
+    }
+    if (controller.getRawButtonPressed(3)) { // X button shoot
+      shooterMotor.set(ControlMode.PercentOutput, 0.84);
+    }
+    if (controller.getRawButtonReleased(3)) { // let go of x stop shooter
+      shooterMotor.set(ControlMode.PercentOutput, 0.0);
+    }
+    if (controller.getLeftBumperPressed()) { //left bumper intake
+      rollerMotor.set(-1.0);
+    }
+    if (controller.getLeftBumperReleased()) { //let go of left bumper stop roller motor
+      rollerMotor.set(0.0);
+    }
+    if (controller.getRightBumperPressed()) {  // right bumper conveyor on
+      conveyorMotor.set(-0.3);
+    }
+    if (controller.getRightBumperReleased()) { //let go of right bumper conveyor off
+      conveyorMotor.set(0.0);
     }
   }
 
