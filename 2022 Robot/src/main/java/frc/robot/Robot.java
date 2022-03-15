@@ -37,7 +37,8 @@ public class Robot extends TimedRobot {
   private static final String k_ballShootingAuto = "Ball Auto";
 
   //Controller
-  XboxController controller = new XboxController(0);
+  XboxController driverController = new XboxController(0);
+  XboxController OPController = new XboxController(2);
 
   //Alliance Color Values
   String allianceColor = DriverStation.getAlliance().toString();
@@ -101,7 +102,7 @@ public class Robot extends TimedRobot {
   //Constants
   double kZero = 0.0;
   double kDeadband = 0.06;
-  double kIntakeSpeed = 0.5;
+  double kIntakeSpeed = 0.7;
   double kConveyorSpeed = 0.25;
   double kShooterPercentSpin = 0.5;
   double kShooterPercentShoot = 0.86;
@@ -272,8 +273,8 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     //Drivetrain Control
     /* Gamepad processing */                 
-		double forward = -1.0 * Math.pow(controller.getLeftY(), 3.0);
-		double turn = 0.5 * controller.getRightX();
+		double forward = -1.0 * Math.pow(driverController.getLeftY(), 3.0);
+		double turn = 0.5 * driverController.getRightX();
     //double forward = -1.0 * controller.getLeftY();
 		//double turn = controller.getRightX();		
 		forward = Deadband(forward);
@@ -286,22 +287,22 @@ public class Robot extends TimedRobot {
 		RightRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
 
     //Climber Control
-    if (controller.getPOV() == 0) {
-      pneumaticreach.set(Value.kForward); //up on dpad extends hooks
+    if (OPController.getPOV() == 180) {
+      pneumaticreach.set(Value.kForward); //down on dpad extends hooks (drop)
     }
-    if (controller.getPOV() == 180) {
-      pneumaticreach.set(Value.kReverse); //down on dpad retracts hooks
+    if (OPController.getPOV() == 0) {
+      pneumaticreach.set(Value.kReverse); //up on dpad retracts hooks (pullup)
     }
-    if (controller.getPOV() == 90) {
+    if (OPController.getPOV() == 90) {
       pneumatictilt.set(Value.kForward); // right leans hooks back
     }                              
-    if (controller.getPOV() == 270) {
+    if (OPController.getPOV() == 270) {
       pneumatictilt.set(Value.kReverse); //left brings hooks back upright
     }
-    if (controller.getRawButtonPressed(7) && controller.getRawButtonPressed(8)) {
+    if (OPController.getRawButtonPressed(7) && OPController.getRawButtonPressed(8)) {
       clampPneumatic.set(Value.kForward);  //back and start open clamps
     }
-    if (controller.getYButton()) {
+    if (OPController.getYButton()) {
       clampPneumatic.set(Value.kReverse); //Y closes clamps remove
     }
     
@@ -538,8 +539,8 @@ public class Robot extends TimedRobot {
         shooterMotor.set(kZero);
         conveyorMotor.set(kZero);
 
-        if (controller.getLeftBumper()){
-          if (controller.getAButton()){   //If they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
+        if (driverController.getLeftBumper()){
+          if (driverController.getAButton()){   //If they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
             rollerMotor.set(kIntakeSpeed);
             centerMotor.set(kIntakeSpeed);
           } else {
@@ -573,8 +574,8 @@ public class Robot extends TimedRobot {
         shooterMotor.set(kZero);
         conveyorMotor.set(kZero);
 
-        if (controller.getLeftBumper()){ //if they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
-          if (controller.getAButton()){
+        if (driverController.getLeftBumper()){ //if they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
+          if (driverController.getAButton()){
             rollerMotor.set(kIntakeSpeed);
             centerMotor.set(kIntakeSpeed);
           } else {
@@ -590,7 +591,7 @@ public class Robot extends TimedRobot {
           conveyorState = "move2shooter";
         }
 
-        if(controller.getXButton()) {
+        if(driverController.getXButton()) {
           conveyorState = "move2shooter";
         }
       break;
@@ -608,7 +609,7 @@ public class Robot extends TimedRobot {
         conveyorMotor.set(kZero);
         shooterMotor.set(ControlMode.PercentOutput, kShooterPercentSpin);
         
-        if (controller.getXButton()) { //if the 'X' button is pushed, fire the balls
+        if (driverController.getXButton()) { //if the 'X' button is pushed, fire the balls
           conveyorState = "FireFireFire";
         }
       break;
@@ -619,7 +620,7 @@ public class Robot extends TimedRobot {
         if (shooterMotor.getSelectedSensorVelocity() >= kShooterTarget) {
           conveyorMotor.set(-kConveyorSpeed);
           
-          if (controller.getXButton() && !inGate_BB.get() && !midGate_BB.get() && !shooter_BB.get()) { //shooter runs when x is pushed and continues until x is pushed again. Do not hit x again until conveyor is empty
+          if (driverController.getXButton() && !inGate_BB.get() && !midGate_BB.get() && !shooter_BB.get()) { //shooter runs when x is pushed and continues until x is pushed again. Do not hit x again until conveyor is empty
             conveyorState = "intake1";
           }
         }
@@ -638,7 +639,10 @@ public class Robot extends TimedRobot {
     }
       
     //barf button
-    if (controller.getLeftBumper() && controller.getRightBumper()) {
+    if (driverController.getLeftBumper() && driverController.getRightBumper()) {
+      conveyorState = "emergencyClear";
+    }
+    if (OPController.getLeftBumper() && OPController.getRightBumper()) {
       conveyorState = "emergencyClear";
     }
   }
