@@ -111,6 +111,8 @@ public class Robot extends TimedRobot {
   double kShooterVelocity = 17500.0;
   double kBlueConfidence = 0.9;
   double kRedConfidence = 0.8;
+  double kYOLO = 0.95;
+  double kconveyorShoot = 0.80;
 
   @Override
   public void robotInit() {
@@ -516,7 +518,7 @@ public class Robot extends TimedRobot {
         conveyorMotor.set(kConveyorSpeed);
         centerMotor.set(kIntakeSpeed);
         rollerMotor.set(kIntakeSpeed);
-        shooterMotor.set(ControlMode.Velocity, kZero);
+       shooterMotor.set(ControlMode.Velocity, kZero);
 
         if (!inGate_BB.get() && !midGate_BB.get() && !shooter_BB.get()) { //shooter runs when x is pushed and continues until x is pushed again. Do not hit x again until conveyor is empty
           conveyorState = "intake1";
@@ -618,7 +620,7 @@ public class Robot extends TimedRobot {
         shooterMotor.set(ControlMode.PercentOutput, kShooterPercentShoot);
         
         if (shooterMotor.getSelectedSensorVelocity() >= kShooterTarget) {
-          conveyorMotor.set(-kConveyorSpeed);
+          conveyorMotor.set(-kconveyorShoot);
           
           if (driverController.getXButton() && !inGate_BB.get() && !midGate_BB.get() && !shooter_BB.get()) { //shooter runs when x is pushed and continues until x is pushed again. Do not hit x again until conveyor is empty
             conveyorState = "intake1";
