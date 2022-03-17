@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -43,9 +42,6 @@ public class Robot extends TimedRobot {
   //Alliance Color Values
   String allianceColor = DriverStation.getAlliance().toString();
   String colorString;
-
-  //Shooter Timer For Autonomous
-  Timer ShooterTimer;
   
   //Drive Train
   //Drive: 4 Falcon motors with integrated motor controllers
@@ -99,20 +95,28 @@ public class Robot extends TimedRobot {
   DoubleSolenoid pneumaticreach = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 4, 5); //Hooks - Reach
   DoubleSolenoid pneumatictilt = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 6, 7);  //Hooks - Tilt
 
+  //Time
+  long matchTime;
+
   //Constants
-  double kZero = 0.0;
-  double kDeadband = 0.06;
-  double kIntakeSpeed = 0.7;
-  double kConveyorSpeed = 0.25;
-  double kShooterPercentSpin = 0.5;
-  double kShooterPercentShoot = 0.86;
-  double kShooterSpinup = 10000.0;
-  double kShooterTarget = 17000.0;
-  double kShooterVelocity = 17500.0;
-  double kBlueConfidence = 0.9;
-  double kRedConfidence = 0.8;
-  double kYOLO = 0.95;
-  double kconveyorShoot = 0.80;
+  final double kZero = 0.0;
+  final double kDeadband = 0.06;
+  final double kIntakeSpeed = 0.7;
+  final double kConveyorSpeed = 0.25;
+  final double kShooterPercentSpin = 0.5;
+  final double kShooterPercentShoot = 0.86;
+  final double kShooterTarget = 18000.0;
+  final double kShooterVelocity = 20000.0;
+  final double kSpinupFeedforward = 0.5;
+  final double kFireFeedforward = 0.75;
+  final double kBlueConfidence = 0.9;
+  final double kRedConfidence = 0.8;
+  final double kYOLO = 0.95;
+  final double kconveyorShoot = 0.30;
+  final double kAutoSpeed = 0.5;
+  final long kShooterDelay = 3000;
+  final long kTaxiDelay = 10000;
+  final double kTaxiDistance = 90000.0;
 
   @Override
   public void robotInit() {
@@ -121,9 +125,39 @@ public class Robot extends TimedRobot {
     SmartDashboard.putData("Auto choices", m_chooser);
 
     m_colorMatcher.addColorMatch(kBlueTarget);
-    m_colorMatcher.addColorMatch(kRedTarget); 
-    m_colorMatcher.addColorMatch(kGreenTarget); 
-    m_colorMatcher.addColorMatch(kYellowTarget); 
+    m_colorMatcher.addColorMatch(kRedTarget);
+    m_colorMatcher.addColorMatch(kGreenTarget);
+    m_colorMatcher.addColorMatch(kYellowTarget);
+
+    LeftFront.setSelectedSensorPosition(kZero);
+    
+    /* Ensure motor output is neutral during init */
+    LeftFront.set(ControlMode.PercentOutput, kZero);
+    LeftRear.set(ControlMode.PercentOutput, kZero);
+    RightFront.set(ControlMode.PercentOutput, kZero);
+    RightRear.set(ControlMode.PercentOutput, kZero);
+    shooterMotor.set(ControlMode.PercentOutput, kZero);
+
+    /* Factory Default all hardware to prevent unexpected behaviour */
+    LeftFront.configFactoryDefault();
+    LeftRear.configFactoryDefault();
+    RightFront.configFactoryDefault();
+    RightRear.configFactoryDefault();
+    shooterMotor.configFactoryDefault();
+
+    /* Set Neutral mode */
+    LeftFront.setNeutralMode(NeutralMode.Coast);
+    LeftRear.setNeutralMode(NeutralMode.Brake);
+    RightFront.setNeutralMode(NeutralMode.Coast);
+    RightRear.setNeutralMode(NeutralMode.Brake);
+    shooterMotor.setNeutralMode(NeutralMode.Coast);
+
+    /* Configure output direction */
+    LeftFront.setInverted(TalonFXInvertType.CounterClockwise);
+    LeftRear.setInverted(TalonFXInvertType.CounterClockwise);
+    RightFront.setInverted(TalonFXInvertType.Clockwise);
+    RightRear.setInverted(TalonFXInvertType.Clockwise);
+    shooterMotor.setInverted(TalonFXInvertType.CounterClockwise);
    }
 
 
@@ -149,81 +183,81 @@ public class Robot extends TimedRobot {
     SmartDashboard.putBoolean("Shooter Gate", shooter_BB.get());
     SmartDashboard.putNumber("Shooter Encoder Value", shooterMotor.getSelectedSensorPosition());
     SmartDashboard.putNumber("Shooter Velocity", shooterMotor.getSelectedSensorVelocity());
+    SmartDashboard.putNumber("Drive Distance", LeftFront.getSelectedSensorPosition());
     SmartDashboard.putString("Conveyor State", conveyorState);
   }
 
   @Override
   public void autonomousInit() {
-    ShooterTimer.reset();
     m_autoSelected = m_chooser.getSelected();
-    // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
+    m_autoSelected = SmartDashboard.getString("Auto Selector", k_ballShootingAuto);
     System.out.println("Auto selected: " + m_autoSelected);
 
     //tells the robot what alliance color we are
     allianceColor = DriverStation.getAlliance().toString();
+
+    LeftFront.setSelectedSensorPosition(kZero);
+
+    matchTime = System.currentTimeMillis();
   }
   
   @Override
   public void autonomousPeriodic() {
+    SmartDashboard.putString("Auto Mode", m_autoSelected);
+    SmartDashboard.putNumber("Auto", System.currentTimeMillis() - matchTime);
+
     switch (m_autoSelected) {
       
       case k_taxiAuto:
-       // taxi autonomous
-         LeftFront.set(1.0); //depending on what direction the robot is facing negative or positive
-         LeftRear.set(1.0);
-         RightFront.set(1.0);
-         RightRear.set(1.0);
-         if (LeftFront.getSelectedSensorPosition() >= 1.0) { //change 1.0 to proper value
+        //taxi autonomous
+        LeftFront.set(ControlMode.PercentOutput, -kAutoSpeed);
+        LeftRear.set(ControlMode.PercentOutput, -kAutoSpeed);
+        RightFront.set(ControlMode.PercentOutput, -kAutoSpeed);
+        RightRear.set(ControlMode.PercentOutput, -kAutoSpeed);
+        if (LeftFront.getSelectedSensorPosition() <= -kTaxiDistance) { //change 1.0 to proper value
           m_autoSelected = "autoEnd";
-         }
-        break;
+        }
+      break;
 
-        case "autoEnd":
+      case "autoEnd":
         LeftFront.set(kZero);
         LeftRear.set(kZero);
         RightFront.set(kZero);
         RightRear.set(kZero);
-        shooterMotor.set(ControlMode.Velocity, kZero);
+        shooterMotor.set(ControlMode.PercentOutput, kZero);
         conveyorMotor.set(kZero);
-        break;
-
-      case k_ballShootingAuto:
-         //drive to the goal
-         LeftFront.set(ControlMode.Position, 2500.0); //change 2500.0 to proper value
-         LeftRear.set(ControlMode.Position, 2500.0);
-         RightFront.set(ControlMode.Position, 2500.0);
-         RightRear.set(ControlMode.Position, 2500.0);
-         shooterMotor.set(ControlMode.Velocity, kShooterSpinup); //change 1.0 to actual shooter velocity 100%
-         if (LeftFront.getSelectedSensorPosition() >= 2500.0) { //change 2500.0 to proper value
-          m_autoSelected = "FireFireFire";
-         }
-         //move through states to shoot
-         //back out of taxi area
       break;
 
-      case "FireFireFire":
-      ShooterTimer.start();
-      //if falcon is up to speed
-      shooterMotor.set(ControlMode.Velocity, kShooterVelocity);
-      shooterMotor.getSelectedSensorVelocity(); 
-      if (shooterMotor.getSelectedSensorVelocity() >= kShooterTarget) {
-        conveyorMotor.set(kConveyorSpeed);
-        if (ShooterTimer.get() > 3.0) { //shooter runs until empty. Change 3 to proper length
+      case k_ballShootingAuto:
+        LeftFront.set(ControlMode.PercentOutput, kZero);
+        LeftRear.set(ControlMode.PercentOutput, kZero);
+        RightFront.set(ControlMode.PercentOutput, kZero);
+        RightRear.set(ControlMode.PercentOutput, kZero);
+        
+        if ((System.currentTimeMillis() - matchTime) > kShooterDelay) { //shooter runs until empty. Change 3 to proper length
+          shooterMotor.set(ControlMode.PercentOutput, kZero);
+          conveyorMotor.set(kZero);
+        } else {
+          shooterMotor.set(ControlMode.PercentOutput, ShooterControl(kShooterVelocity, kFireFeedforward));
+          if (shooterMotor.getSelectedSensorVelocity() >= kShooterTarget) {
+            conveyorMotor.set(-kConveyorSpeed);
+          }
+        }
+        if ((System.currentTimeMillis() - matchTime) > kTaxiDelay) { //shooter runs until empty. Change 3 to proper length
           m_autoSelected = "reverseTaxi2";
         }
-      }
       break;
 
       case "reverseTaxi2":
-      LeftFront.set(ControlMode.Position, -5000.0); //change -5000.0 to proper value
-      LeftRear.set(ControlMode.Position, -5000.0);
-      RightFront.set(ControlMode.Position, -5000.0);
-      RightRear.set(ControlMode.Position, -5000.0);
-      shooterMotor.set(ControlMode.Velocity, kZero);
-      conveyorMotor.set(kZero);
-      if (LeftFront.getSelectedSensorPosition() <= -5000.0) { //change -5000.0 to proper value
-       m_autoSelected = "autoEnd";
-      }
+        LeftFront.set(ControlMode.PercentOutput, -kAutoSpeed);
+        LeftRear.set(ControlMode.PercentOutput, -kAutoSpeed);
+        RightFront.set(ControlMode.PercentOutput, -kAutoSpeed);
+        RightRear.set(ControlMode.PercentOutput, -kAutoSpeed);
+        shooterMotor.set(ControlMode.PercentOutput, kZero);
+        conveyorMotor.set(kZero);
+        if (LeftFront.getSelectedSensorPosition() <= -kTaxiDistance) { //change -5000.0 to proper value
+          m_autoSelected = "autoEnd";
+        }
       break;
 
     }
@@ -231,62 +265,34 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
+    LeftFront.setSelectedSensorPosition(kZero);
 
     allianceColor = DriverStation.getAlliance().toString();
 
     conveyorState = "intake1";
-
-    /* Ensure motor output is neutral during init */
-    LeftFront.set(ControlMode.PercentOutput, 0);
-    LeftRear.set(ControlMode.PercentOutput, 0);
-    RightFront.set(ControlMode.PercentOutput, 0);
-    RightRear.set(ControlMode.PercentOutput, 0);
-    shooterMotor.set(ControlMode.PercentOutput, 0);
-
-    /* Factory Default all hardware to prevent unexpected behaviour */
-    LeftFront.configFactoryDefault();
-    LeftRear.configFactoryDefault();
-    RightFront.configFactoryDefault();
-    RightRear.configFactoryDefault();
-    shooterMotor.configFactoryDefault();
-
-    /* Set Neutral mode */
-    LeftFront.setNeutralMode(NeutralMode.Coast);
-    LeftRear.setNeutralMode(NeutralMode.Brake);
-    RightFront.setNeutralMode(NeutralMode.Coast);
-    RightRear.setNeutralMode(NeutralMode.Brake);
-    shooterMotor.setNeutralMode(NeutralMode.Coast);
-
-    //shooterMotor.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
-
+    
     /* Configure output direction */
     LeftFront.setInverted(TalonFXInvertType.CounterClockwise);
     LeftRear.setInverted(TalonFXInvertType.CounterClockwise);
     RightFront.setInverted(TalonFXInvertType.Clockwise);
     RightRear.setInverted(TalonFXInvertType.Clockwise);
     shooterMotor.setInverted(TalonFXInvertType.CounterClockwise);
-
-    /* Set Sensor Phase */
-    //shooterMotor.setSensorPhase(true);
-    //shooterMotor.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
   }
 
   @Override
   public void teleopPeriodic() {
     //Drivetrain Control
     /* Gamepad processing */                 
-		double forward = -1.0 * Math.pow(driverController.getLeftY(), 3.0);
-		double turn = 0.5 * driverController.getRightX();
-    //double forward = -1.0 * controller.getLeftY();
-		//double turn = controller.getRightX();		
-		forward = Deadband(forward);
-		turn = Deadband(turn);
+		double left = -1.0 * Math.pow(driverController.getLeftY(), 3.0);
+		double right = -1.0 * Math.pow(driverController.getRightY(), 3.0);	
+		left = Deadband(left);
+		right = Deadband(right);
 
 		/* Arcade Drive using PercentOutput along with Arbitrary Feed Forward supplied by turn */
-		LeftFront.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, +turn);
-		LeftRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, +turn);
-    RightFront.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
-		RightRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
+		LeftFront.set(ControlMode.PercentOutput, left);
+		LeftRear.set(ControlMode.PercentOutput, left);
+    RightFront.set(ControlMode.PercentOutput, right);
+		RightRear.set(ControlMode.PercentOutput, right);
 
     //Climber Control
     if (OPController.getPOV() == 180) {
@@ -311,11 +317,9 @@ public class Robot extends TimedRobot {
     /*
     if (controller.getRawButton(3)) { // X button shoot
       shooterMotor.set(ControlMode.PercentOutput, 0.9);
-      //shooterMotor.set(ControlMode.Velocity, -kShooterVelocity);
       SmartDashboard.putBoolean("Shooter Activated", true);
     } else {
       shooterMotor.set(ControlMode.PercentOutput, kZero);
-      //shooterMotor.set(ControlMode.Velocity, kZero);
       SmartDashboard.putBoolean("Shooter Activated", false);
     }
       //if (controller.getLeftBumperPressed() && controller.getRawButtonPressed(2)) { //left bumper + back barf
@@ -465,7 +469,7 @@ public class Robot extends TimedRobot {
         rollerMotor.set(kZero);
         centerMotor.set(kZero);
         conveyorMotor.set(kZero);
-        shooterMotor.set(ControlMode.Velocity, kShooterSpinup);
+        shooterMotor.set(ControlMode.PercentOutput, kShooterSpinup);
         
         if (controller.getXButton()) { //if the 'X' button is pushed, fire the balls
           conveyorState = "FireFireFire";
@@ -473,7 +477,7 @@ public class Robot extends TimedRobot {
       break;
 
       case "FireFireFire":
-        shooterMotor.set(ControlMode.Velocity, kShooterVelocity);
+        shooterMotor.set(ControlMode.PercentOutput, kShooterVelocity);
         
         if (shooterMotor.getSelectedSensorVelocity() >= kShooterTarget) {
           conveyorMotor.set(-kConveyorSpeed);
@@ -518,7 +522,7 @@ public class Robot extends TimedRobot {
         conveyorMotor.set(kConveyorSpeed);
         centerMotor.set(kIntakeSpeed);
         rollerMotor.set(kIntakeSpeed);
-       shooterMotor.set(ControlMode.Velocity, kZero);
+       shooterMotor.set(ControlMode.PercentOutput, kZero);
 
         if (!inGate_BB.get() && !midGate_BB.get() && !shooter_BB.get()) { //shooter runs when x is pushed and continues until x is pushed again. Do not hit x again until conveyor is empty
           conveyorState = "intake1";
@@ -538,7 +542,7 @@ public class Robot extends TimedRobot {
         //Intake control
         //If the left bumper button on the controller is pressed the intake is down(forward), 
         //Else it isn't pressed the intake is up(reverse)
-        shooterMotor.set(kZero);
+        shooterMotor.set(ControlMode.PercentOutput, kZero);
         conveyorMotor.set(kZero);
 
         if (driverController.getLeftBumper()){
@@ -546,8 +550,8 @@ public class Robot extends TimedRobot {
             rollerMotor.set(kIntakeSpeed);
             centerMotor.set(kIntakeSpeed);
           } else {
-            rollerMotor.set(-kIntakeSpeed);
-            centerMotor.set(-kIntakeSpeed);
+            rollerMotor.set(-1.0 * kIntakeSpeed);
+            centerMotor.set(-1.0 * kIntakeSpeed);
           }
         } else {  //Else stop all of the motors
           rollerMotor.set(kZero);
@@ -562,7 +566,7 @@ public class Robot extends TimedRobot {
       
       case "move2Mid": 
         //Run conveyor  
-        conveyorMotor.set(-kConveyorSpeed);
+        conveyorMotor.set(-1.0 * kConveyorSpeed);
 
         if (midGate_BB.get()) {
           conveyorState = "Intake2";
@@ -581,8 +585,8 @@ public class Robot extends TimedRobot {
             rollerMotor.set(kIntakeSpeed);
             centerMotor.set(kIntakeSpeed);
           } else {
-            rollerMotor.set(-kIntakeSpeed);
-            centerMotor.set(-kIntakeSpeed);
+            rollerMotor.set(-1.0 * kIntakeSpeed);
+            centerMotor.set(-1.0 * kIntakeSpeed);
           }
         } else {
           rollerMotor.set(kZero);
@@ -599,7 +603,7 @@ public class Robot extends TimedRobot {
       break;
       
       case "move2shooter":
-        conveyorMotor.set(-kConveyorSpeed);
+        conveyorMotor.set(-1.0 * kConveyorSpeed);
         if (shooter_BB.get()) {
           conveyorState = "spinup";
         }
@@ -617,14 +621,14 @@ public class Robot extends TimedRobot {
       break;
 
       case "FireFireFire":
-        shooterMotor.set(ControlMode.PercentOutput, kShooterPercentShoot);
+        shooterMotor.set(ControlMode.PercentOutput, ShooterControl(kShooterVelocity, kFireFeedforward));
         
         if (shooterMotor.getSelectedSensorVelocity() >= kShooterTarget) {
-          conveyorMotor.set(-kconveyorShoot);
-          
-          if (driverController.getXButton() && !inGate_BB.get() && !midGate_BB.get() && !shooter_BB.get()) { //shooter runs when x is pushed and continues until x is pushed again. Do not hit x again until conveyor is empty
-            conveyorState = "intake1";
-          }
+          conveyorMotor.set(-kconveyorShoot); 
+        }
+
+        if (!driverController.getXButton() && !inGate_BB.get() && !midGate_BB.get() && !shooter_BB.get()) { //shooter runs when x is pushed and continues until x is pushed again. Do not hit x again until conveyor is empty
+          conveyorState = "intake1";
         }
       break;
 
@@ -632,7 +636,7 @@ public class Robot extends TimedRobot {
         conveyorMotor.set(kConveyorSpeed);
         centerMotor.set(kIntakeSpeed);
         rollerMotor.set(kIntakeSpeed);
-        shooterMotor.set(ControlMode.Velocity, kZero);
+        shooterMotor.set(ControlMode.PercentOutput, kZero);
 
         if (!inGate_BB.get() && !midGate_BB.get() && !shooter_BB.get()) { //shooter runs when x is pushed and continues until x is pushed again. Do not hit x again until conveyor is empty
           conveyorState = "intake1";
@@ -650,14 +654,19 @@ public class Robot extends TimedRobot {
   }
 
   double Deadband(double value) {
-    if (value >= +kDeadband) { //Upper deadband
+    if (value >= kDeadband) { //Upper deadband
       return value;
     }
-    else if (value <= -kDeadband) { //Lower deadband
+    else if (value <= (-1.0 * kDeadband)) { //Lower deadband
       return value;
     }
     else {  //Outside deadband 
       return 0.0;
     }
+  }
+
+  double ShooterControl(double target, double feedforward){
+    double output = (1.0 - (shooterMotor.getSelectedSensorVelocity() / target)) + feedforward;
+    return output;
   }
 }
