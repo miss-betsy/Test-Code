@@ -43,13 +43,16 @@ public class Robot extends TimedRobot {
   String allianceColor = DriverStation.getAlliance().toString();
   String colorString;
   
-  //Drive Train
+  //Drive Train 
   //Drive: 4 Falcon motors with integrated motor controllers
   //Rio tells it that the system is the Rio, every other system will ignore
   WPI_TalonFX LeftFront = new WPI_TalonFX(1, "rio");
   WPI_TalonFX LeftRear = new WPI_TalonFX(3, "rio");
   WPI_TalonFX RightFront = new WPI_TalonFX(4, "rio");
   WPI_TalonFX RightRear = new WPI_TalonFX(2, "rio");
+  double forward = 0.0;
+  double turn = 0.0;
+
 
   //Cargo Handling
   //Intake
@@ -283,16 +286,42 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     //Drivetrain Control
     /* Gamepad processing */                 
-		double left = -1.0 * Math.pow(driverController.getLeftY(), 3.0);
-		double right = -1.0 * Math.pow(driverController.getRightY(), 3.0);	
-		left = Deadband(left);
-		right = Deadband(right);
+		//double left = -1.0 * Math.pow(driverController.getLeftY(), 3.0);
+		//double right = -1.0 * Math.pow(driverController.getRightY(), 3.0);	
+		//left = Deadband(left);
+		//right = Deadband(right);
+
+    //if (driverController.getLeftBumperPressed()) {
+    //    forward = -1.0 * Math.pow(driverController.getLeftY(), 3.0);
+    //    turn = 0.5 * driverController.getRightX();
+    //    forward = Deadband(forward);
+    //    turn = Deadband(turn); 
+    //} else {
+    //    forward = -.4 * driverController.getLeftY();
+    //    turn = .2 * driverController.getRightX();
+    //    forward = Deadband(forward);
+    //    turn = Deadband(turn);
+    //}
+
+      if (driverController.getLeftTriggerAxis() > 0.5) {
+        forward = -1.0 * Math.pow(driverController.getLeftY(), 3.0);
+        turn = .5 *driverController.getRightX();
+      } else if (driverController.getLeftTriggerAxis() <0.5 && driverController.getLeftTriggerAxis() > 0.1) {
+        forward = -0.7 * Math.pow(driverController.getLeftY(), 3.0);
+        turn = 0.35 * driverController.getRightX();
+      } else {
+        forward = -0.4 * Math.pow(driverController.getLeftY(), 3.0);
+        turn = 0.2 * driverController.getRightX();
+      }
+
+      forward = Deadband(forward);
+      turn = Deadband(turn);
 
 		/* Arcade Drive using PercentOutput along with Arbitrary Feed Forward supplied by turn */
-		LeftFront.set(ControlMode.PercentOutput, left);
-		LeftRear.set(ControlMode.PercentOutput, left);
-    RightFront.set(ControlMode.PercentOutput, right);
-		RightRear.set(ControlMode.PercentOutput, right);
+		LeftFront.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, +turn);
+		LeftRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward,  +turn);
+    RightFront.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward,  -turn);
+		RightRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward,  -turn);
 
     //Climber Control
     if (OPController.getPOV() == 180) {
@@ -545,8 +574,8 @@ public class Robot extends TimedRobot {
         shooterMotor.set(ControlMode.PercentOutput, kZero);
         conveyorMotor.set(kZero);
 
-        if (driverController.getLeftBumper()){
-          if (driverController.getAButton()){   //If they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
+        if (OPController.getLeftBumper()){
+          if (OPController.getAButton()){   //If they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
             rollerMotor.set(kIntakeSpeed);
             centerMotor.set(kIntakeSpeed);
           } else {
@@ -580,8 +609,8 @@ public class Robot extends TimedRobot {
         shooterMotor.set(kZero);
         conveyorMotor.set(kZero);
 
-        if (driverController.getLeftBumper()){ //if they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
-          if (driverController.getAButton()){
+        if (OPController.getLeftBumper()){ //if they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
+          if (OPController.getAButton()){
             rollerMotor.set(kIntakeSpeed);
             centerMotor.set(kIntakeSpeed);
           } else {
@@ -645,9 +674,6 @@ public class Robot extends TimedRobot {
     }
       
     //barf button
-    if (driverController.getLeftBumper() && driverController.getRightBumper()) {
-      conveyorState = "emergencyClear";
-    }
     if (OPController.getLeftBumper() && OPController.getRightBumper()) {
       conveyorState = "emergencyClear";
     }
