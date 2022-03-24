@@ -103,7 +103,7 @@ public class Robot extends TimedRobot {
 
   //Constants
   final double kZero = 0.0;
-  final double kDeadband = 0.06;
+  final double kDeadband = 0.01;
   final double kIntakeSpeed = 0.7;
   final double kConveyorSpeed = 0.25;
   final double kShooterPercentSpin = 0.5;
@@ -142,17 +142,17 @@ public class Robot extends TimedRobot {
     shooterMotor.set(ControlMode.PercentOutput, kZero);
 
     /* Factory Default all hardware to prevent unexpected behaviour */
-    LeftFront.configFactoryDefault();
-    LeftRear.configFactoryDefault();
-    RightFront.configFactoryDefault();
-    RightRear.configFactoryDefault();
-    shooterMotor.configFactoryDefault();
+    //LeftFront.configFactoryDefault();
+    //LeftRear.configFactoryDefault();
+    //RightFront.configFactoryDefault();
+    //RightRear.configFactoryDefault();
+    //shooterMotor.configFactoryDefault();
 
     /* Set Neutral mode */
     LeftFront.setNeutralMode(NeutralMode.Coast);
-    LeftRear.setNeutralMode(NeutralMode.Brake);
+    LeftRear.setNeutralMode(NeutralMode.Coast);
     RightFront.setNeutralMode(NeutralMode.Coast);
-    RightRear.setNeutralMode(NeutralMode.Brake);
+    RightRear.setNeutralMode(NeutralMode.Coast);
     shooterMotor.setNeutralMode(NeutralMode.Coast);
 
     /* Configure output direction */
@@ -574,8 +574,8 @@ public class Robot extends TimedRobot {
         shooterMotor.set(ControlMode.PercentOutput, kZero);
         conveyorMotor.set(kZero);
 
-        if (OPController.getLeftBumper()){
-          if (OPController.getAButton()){   //If they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
+        if (driverController.getLeftBumper()){
+          if (driverController.getAButton()){   //If they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
             rollerMotor.set(kIntakeSpeed);
             centerMotor.set(kIntakeSpeed);
           } else {
@@ -609,8 +609,8 @@ public class Robot extends TimedRobot {
         shooterMotor.set(kZero);
         conveyorMotor.set(kZero);
 
-        if (OPController.getLeftBumper()){ //if they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
-          if (OPController.getAButton()){
+        if (driverController.getLeftBumper()){ //if they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
+          if (driverController.getAButton()){
             rollerMotor.set(kIntakeSpeed);
             centerMotor.set(kIntakeSpeed);
           } else {
@@ -676,6 +676,14 @@ public class Robot extends TimedRobot {
     //barf button
     if (OPController.getLeftBumper() && OPController.getRightBumper()) {
       conveyorState = "emergencyClear";
+    }
+    if (driverController.getLeftBumper() && driverController.getRightBumper()) {
+      conveyorState = "emergencyClear";
+    }
+
+    if (OPController.getAButton()) {
+      rollerMotor.set(-kIntakeSpeed);
+      centerMotor.set(-kIntakeSpeed);
     }
   }
 
