@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -15,6 +17,9 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive.WheelSpeeds;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
@@ -53,7 +58,9 @@ public class Robot extends TimedRobot {
   double forward = 0.0;
   double turn = 0.0;
 
-
+  //Drive Train Smoothing
+  SlewRateLimiter throttleLimiter = new SlewRateLimiter(1.25);
+  
   //Cargo Handling
   //Intake
   //Roller Drive: In/Out - Spark Max and Neo
@@ -103,8 +110,8 @@ public class Robot extends TimedRobot {
 
   //Constants
   final double kZero = 0.0;
-  final double kDeadband = 0.01;
-  final double kIntakeSpeed = 0.7;
+  final double kDeadband = 0.02;
+  final double kIntakeSpeed = 0.8;
   final double kConveyorSpeed = 0.25;
   final double kShooterPercentSpin = 0.5;
   final double kShooterPercentShoot = 0.86;
@@ -121,7 +128,7 @@ public class Robot extends TimedRobot {
   final long kTaxiDelay = 10000;
   final double kTaxiDistance = 90000.0;
 
-  @Override
+    @Override
   public void robotInit() {
     m_chooser.setDefaultOption("Taxi Auto", k_taxiAuto);
     m_chooser.addOption("Ball Auto", k_ballShootingAuto);
@@ -133,6 +140,8 @@ public class Robot extends TimedRobot {
     m_colorMatcher.addColorMatch(kYellowTarget);
 
     LeftFront.setSelectedSensorPosition(kZero);
+
+    CameraServer.startAutomaticCapture();
     
     /* Ensure motor output is neutral during init */
     LeftFront.set(ControlMode.PercentOutput, kZero);
@@ -149,11 +158,7 @@ public class Robot extends TimedRobot {
     //shooterMotor.configFactoryDefault();
 
     /* Set Neutral mode */
-    LeftFront.setNeutralMode(NeutralMode.Coast);
-    LeftRear.setNeutralMode(NeutralMode.Coast);
-    RightFront.setNeutralMode(NeutralMode.Coast);
-    RightRear.setNeutralMode(NeutralMode.Coast);
-    shooterMotor.setNeutralMode(NeutralMode.Coast);
+
 
     /* Configure output direction */
     LeftFront.setInverted(TalonFXInvertType.CounterClockwise);
@@ -202,6 +207,12 @@ public class Robot extends TimedRobot {
     LeftFront.setSelectedSensorPosition(kZero);
 
     matchTime = System.currentTimeMillis();
+
+    LeftFront.setNeutralMode(NeutralMode.Brake);
+    LeftRear.setNeutralMode(NeutralMode.Brake);
+    RightFront.setNeutralMode(NeutralMode.Brake);
+    RightRear.setNeutralMode(NeutralMode.Brake);
+    shooterMotor.setNeutralMode(NeutralMode.Brake);
   }
   
   @Override
@@ -273,6 +284,12 @@ public class Robot extends TimedRobot {
     allianceColor = DriverStation.getAlliance().toString();
 
     conveyorState = "intake1";
+
+    LeftFront.setNeutralMode(NeutralMode.Coast);
+    LeftRear.setNeutralMode(NeutralMode.Coast);
+    RightFront.setNeutralMode(NeutralMode.Coast);
+    RightRear.setNeutralMode(NeutralMode.Coast);
+    shooterMotor.setNeutralMode(NeutralMode.Coast);
     
     /* Configure output direction */
     LeftFront.setInverted(TalonFXInvertType.CounterClockwise);
@@ -302,26 +319,43 @@ public class Robot extends TimedRobot {
     //    forward = Deadband(forward);
     //    turn = Deadband(turn);
     //}
-
+/*
       if (driverController.getLeftTriggerAxis() > 0.5) {
         forward = -1.0 * Math.pow(driverController.getLeftY(), 3.0);
-        turn = .5 *driverController.getRightX();
+        turn = 0.7 *driverController.getRightX();
       } else if (driverController.getLeftTriggerAxis() <0.5 && driverController.getLeftTriggerAxis() > 0.1) {
         forward = -0.7 * Math.pow(driverController.getLeftY(), 3.0);
-        turn = 0.35 * driverController.getRightX();
+        turn = 0.55 * driverController.getRightX();
       } else {
-        forward = -0.4 * Math.pow(driverController.getLeftY(), 3.0);
-        turn = 0.2 * driverController.getRightX();
+        forward = -0.5 * Math.pow(driverController.getLeftY(), 3.0);
+        turn = 0.3 * driverController.getRightX();
       }
+*/
+      boolean isQuickTurn = Math.abs(forward) < 0.1;
+      forward = -1.0 * Math.pow(driverController.getLeftY(), 3.0);
+      turn = 0.7 * driverController.getRightX();
 
       forward = Deadband(forward);
       turn = Deadband(turn);
 
+      double limitedForward = throttleLimiter.calculate(forward);
+
+      
+      WheelSpeeds wheelSpeed = DifferentialDrive.curvatureDriveIK(limitedForward, turn, isQuickTurn);
+
+      LeftFront.set(ControlMode.PercentOutput, wheelSpeed.left);
+      LeftRear.set(ControlMode.PercentOutput, wheelSpeed.left);
+      RightFront.set(ControlMode.PercentOutput, wheelSpeed.right);
+      RightRear.set(ControlMode.PercentOutput, wheelSpeed.right);
+
+
 		/* Arcade Drive using PercentOutput along with Arbitrary Feed Forward supplied by turn */
-		LeftFront.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, +turn);
-		LeftRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward,  +turn);
-    RightFront.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward,  -turn);
-		RightRear.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward,  -turn);
+    /*
+		LeftFront.set(ControlMode.PercentOutput, limitedForward, DemandType.ArbitraryFeedForward, +turn);
+		LeftRear.set(ControlMode.PercentOutput, limitedForward, DemandType.ArbitraryFeedForward,  +turn);
+    RightFront.set(ControlMode.PercentOutput, limitedForward, DemandType.ArbitraryFeedForward,  -turn);
+		RightRear.set(ControlMode.PercentOutput, limitedForward, DemandType.ArbitraryFeedForward,  -turn);
+    */
 
     //Climber Control
     if (OPController.getPOV() == 180) {
@@ -637,6 +671,7 @@ public class Robot extends TimedRobot {
           conveyorState = "spinup";
         }
       break;
+      
       
       case "spinup": 
         rollerMotor.set(kZero);
