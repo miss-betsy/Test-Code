@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive.WheelSpeeds;
@@ -102,8 +103,10 @@ public class Robot extends TimedRobot {
 
   //Climber
   DoubleSolenoid clampPneumatic = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 2, 3); //Clamps
-  DoubleSolenoid pneumaticreach = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 4, 5); //Hooks - Reach
+  //DoubleSolenoid pneumaticreach = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 4, 5); 
   DoubleSolenoid pneumatictilt = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 6, 7);  //Hooks - Tilt
+  DoubleSolenoid pneumaticreach = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 1, 0); //Hooks - Reach
+  Solenoid LEDLights = new Solenoid(PneumaticsModuleType.CTREPCM, 4); 
 
   //Time
   long matchTime;
@@ -111,14 +114,14 @@ public class Robot extends TimedRobot {
   //Constants
   final double kZero = 0.0;
   final double kDeadband = 0.02;
-  final double kIntakeSpeed = 0.8;
+  final double kIntakeSpeed = 0.6;
   final double kConveyorSpeed = 0.25;
   final double kShooterPercentSpin = 0.5;
   final double kShooterPercentShoot = 0.86;
   final double kShooterTarget = 18000.0;
   final double kShooterVelocity = 20000.0;
   final double kSpinupFeedforward = 0.5;
-  final double kFireFeedforward = 0.75;
+  final double kFireFeedforward = 0.80;
   final double kBlueConfidence = 0.9;
   final double kRedConfidence = 0.8;
   final double kYOLO = 0.95;
@@ -127,6 +130,7 @@ public class Robot extends TimedRobot {
   final long kShooterDelay = 3000;
   final long kTaxiDelay = 10000;
   final double kTaxiDistance = 90000.0;
+  final long kPulseLength = 100;
 
     @Override
   public void robotInit() {
@@ -333,7 +337,7 @@ public class Robot extends TimedRobot {
 */
       boolean isQuickTurn = Math.abs(forward) < 0.1;
       forward = -1.0 * Math.pow(driverController.getLeftY(), 3.0);
-      turn = 0.7 * driverController.getRightX();
+      turn = 0.6 * driverController.getRightX();
 
       forward = Deadband(forward);
       turn = Deadband(turn);
@@ -357,7 +361,7 @@ public class Robot extends TimedRobot {
 		RightRear.set(ControlMode.PercentOutput, limitedForward, DemandType.ArbitraryFeedForward,  -turn);
     */
 
-    //Climber Control
+    //Climber Control - change Pneumatictest to poneumaticreach
     if (OPController.getPOV() == 180) {
       pneumaticreach.set(Value.kForward); //down on dpad extends hooks (drop)
     }
@@ -607,6 +611,7 @@ public class Robot extends TimedRobot {
         //Else it isn't pressed the intake is up(reverse)
         shooterMotor.set(ControlMode.PercentOutput, kZero);
         conveyorMotor.set(kZero);
+        LEDLights.set(false);
 
         if (driverController.getLeftBumper()){
           if (driverController.getAButton()){   //If they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
@@ -678,6 +683,7 @@ public class Robot extends TimedRobot {
         centerMotor.set(kZero);
         conveyorMotor.set(kZero);
         shooterMotor.set(ControlMode.PercentOutput, kShooterPercentSpin);
+        LEDLights.set(true);
         
         if (driverController.getXButton()) { //if the 'X' button is pushed, fire the balls
           conveyorState = "FireFireFire";
