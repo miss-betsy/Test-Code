@@ -22,7 +22,6 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive.WheelSpeeds;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
@@ -66,13 +65,12 @@ public class Robot extends TimedRobot {
   //Intake
   //Roller Drive: In/Out - Spark Max and Neo
   CANSparkMax rollerMotor = new CANSparkMax(5, MotorType.kBrushless);
+  //Arm: Up/Down - Spark Max and Neo
+  CANSparkMax intakeMotor = new CANSparkMax(6, MotorType.kBrushless);
 
   //Sensors: Intgrated hall effect for motor speed
-  //Centering
-  //Left and Right: Center/Eject - Spark Max and Neo
-  CANSparkMax centerMotor = new CANSparkMax(6, MotorType.kBrushless);
 
-  //Sensors: Integrated hall effect for motor speed
+
   //Conveyor
   //Inside robot: Up/down - Spark Max and Neo
   CANSparkMax conveyorMotor = new CANSparkMax(7, MotorType.kBrushless);
@@ -616,14 +614,11 @@ public class Robot extends TimedRobot {
         if (driverController.getLeftBumper()){
           if (driverController.getAButton()){   //If they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
             rollerMotor.set(kIntakeSpeed);
-            centerMotor.set(kIntakeSpeed);
           } else {
             rollerMotor.set(-1.0 * kIntakeSpeed);
-            centerMotor.set(-1.0 * kIntakeSpeed);
           }
         } else {  //Else stop all of the motors
           rollerMotor.set(kZero);
-          centerMotor.set(kZero);
         }
 
         //if the beam break is broken, then the state moves to Stage2Color to run conveyor
@@ -651,14 +646,11 @@ public class Robot extends TimedRobot {
         if (driverController.getLeftBumper()){ //if they hit 'A' while the left bumper is pressed, it will eject, otherwise it will intake
           if (driverController.getAButton()){
             rollerMotor.set(kIntakeSpeed);
-            centerMotor.set(kIntakeSpeed);
           } else {
             rollerMotor.set(-1.0 * kIntakeSpeed);
-            centerMotor.set(-1.0 * kIntakeSpeed);
           }
         } else {
           rollerMotor.set(kZero);
-          centerMotor.set(kZero);
         }
 
         if (inGate_BB.get()) {
@@ -680,7 +672,6 @@ public class Robot extends TimedRobot {
       
       case "spinup": 
         rollerMotor.set(kZero);
-        centerMotor.set(kZero);
         conveyorMotor.set(kZero);
         shooterMotor.set(ControlMode.PercentOutput, kShooterPercentSpin);
         LEDLights.set(true);
@@ -704,7 +695,6 @@ public class Robot extends TimedRobot {
 
       case "emergencyClear":
         conveyorMotor.set(kConveyorSpeed);
-        centerMotor.set(kIntakeSpeed);
         rollerMotor.set(kIntakeSpeed);
         shooterMotor.set(ControlMode.PercentOutput, kZero);
 
@@ -724,7 +714,6 @@ public class Robot extends TimedRobot {
 
     if (OPController.getAButton()) {
       rollerMotor.set(-kIntakeSpeed);
-      centerMotor.set(-kIntakeSpeed);
     }
   }
 
