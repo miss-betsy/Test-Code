@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive.WheelSpeeds;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+//import com.ctre.phoenix.motorcontrol.IFollower;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
@@ -67,10 +68,12 @@ public class Robot extends TimedRobot {
   CANSparkMax rollerMotor = new CANSparkMax(5, MotorType.kBrushless);
   //Arm: Up/Down - Spark Max and Neo
   CANSparkMax intakeMotor = new CANSparkMax(6, MotorType.kBrushless);
+  DigitalInput upperLimitSwitch = new DigitalInput(9);
+  DigitalInput lowerLimitSwitch = new DigitalInput(8);
 
   //Sensors: Intgrated hall effect for motor speed
 
-
+//DIO 8 & 9 for intake - 9 upper, 8 lower
   //Conveyor
   //Inside robot: Up/down - Spark Max and Neo
   CANSparkMax conveyorMotor = new CANSparkMax(7, MotorType.kBrushless);
@@ -98,6 +101,7 @@ public class Robot extends TimedRobot {
 
   //Conveyer states
   String conveyorState = "intake1"; 
+  boolean intakeUpDownState = true;
 
   //Climber
   DoubleSolenoid clampPneumatic = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 2, 3); //Clamps
@@ -117,7 +121,7 @@ public class Robot extends TimedRobot {
   final double kShooterPercentSpin = 0.5;
   final double kShooterPercentShoot = 0.86;
   final double kShooterTarget = 18000.0;
-  final double kShooterVelocity = 20000.0;
+  final double kShooterVelocity = 25000.0;
   final double kSpinupFeedforward = 0.5;
   final double kFireFeedforward = 0.80;
   final double kBlueConfidence = 0.9;
@@ -129,6 +133,9 @@ public class Robot extends TimedRobot {
   final long kTaxiDelay = 10000;
   final double kTaxiDistance = 90000.0;
   final long kPulseLength = 100;
+  final double kIntakeDeploySpeed = 0.5;
+  final double kIntakeHold = 0.1;
+
 
     @Override
   public void robotInit() {
@@ -195,6 +202,9 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("Shooter Velocity", shooterMotor.getSelectedSensorVelocity());
     SmartDashboard.putNumber("Drive Distance", LeftFront.getSelectedSensorPosition());
     SmartDashboard.putString("Conveyor State", conveyorState);
+    SmartDashboard.putBoolean("Intake Up/Down", intakeUpDownState);
+    SmartDashboard.putBoolean("Upper Limit Switch", upperLimitSwitch.get());
+    SmartDashboard.putBoolean("Lower Limit Switch", lowerLimitSwitch.get());
   }
 
   @Override
@@ -215,6 +225,7 @@ public class Robot extends TimedRobot {
     RightFront.setNeutralMode(NeutralMode.Brake);
     RightRear.setNeutralMode(NeutralMode.Brake);
     shooterMotor.setNeutralMode(NeutralMode.Brake);
+    //intakeMotor.setNeutralMode(NeutralMode.Brake);
   }
   
   @Override
@@ -292,6 +303,7 @@ public class Robot extends TimedRobot {
     RightFront.setNeutralMode(NeutralMode.Coast);
     RightRear.setNeutralMode(NeutralMode.Coast);
     shooterMotor.setNeutralMode(NeutralMode.Coast);
+    //intakeMotor.setNeutralMode(NeutralMode.Brake);
     
     /* Configure output direction */
     LeftFront.setInverted(TalonFXInvertType.CounterClockwise);
@@ -715,7 +727,28 @@ public class Robot extends TimedRobot {
     if (OPController.getAButton()) {
       rollerMotor.set(-kIntakeSpeed);
     }
-  }
+  
+
+    //intake control
+    if (driverController.getBButton() && intakeUpDownState) {
+      intakeUpDownState = false;
+    }
+    if (driverController.getBButton() && !intakeUpDownState) {
+      intakeUpDownState = true;
+    }
+    if (intakeUpDownState) {
+      if (!upperLimitSwitch.get()) {
+        intakeMotor.set(kIntakeDeploySpeed);
+      } else {
+        intakeMotor.set(kZero);
+      }
+    } else {
+      if (!lowerLimitSwitch.get()) {
+        intakeMotor.set(-1.0 * kIntakeDeploySpeed);
+      } else {
+        intakeMotor.set(-1.0 * kIntakeHold); } }
+      }
+    
 
   double Deadband(double value) {
     if (value >= kDeadband) { //Upper deadband
@@ -730,7 +763,7 @@ public class Robot extends TimedRobot {
   }
 
   double ShooterControl(double target, double feedforward){
-    double output = (1.0 - (shooterMotor.getSelectedSensorVelocity() / target)) + feedforward;
-    return output;
+    double output = (0.55 * ((1.0 - (shooterMotor.getSelectedSensorVelocity() / target)))) + feedforward;
+    return output; //change 0.7 to some other value
   }
 }
