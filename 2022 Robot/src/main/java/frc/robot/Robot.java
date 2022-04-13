@@ -41,6 +41,7 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
   private static final String k_taxiAuto = "Taxi Auto";
   private static final String k_ballShootingAuto = "Ball Auto";
+  private static final String k_ScoreDriveTurnDriveCollect = "Fancy Auto";
 
   //Controller
   XboxController driverController = new XboxController(0);
@@ -102,7 +103,7 @@ public class Robot extends TimedRobot {
 
   //Conveyer states
   String conveyorState = "intake1"; 
-  boolean intakeUpDownState = true;
+  boolean intakeUpDownState = false;
 
   //Climber
   DoubleSolenoid clampPneumatic = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 2, 3); //Clamps
@@ -135,7 +136,7 @@ public class Robot extends TimedRobot {
   final double kTaxiDistance = 90000.0;
   final long kPulseLength = 100;
   final double kIntakeHold = 0.1;
-  final double kUpDeploy = 0.5;
+  final double kUpDeploy = -0.02;
   final double kDownDeploy = 0.1;
   final double kAutoTestSpeed = 0.2;
   final double kTravel2Turn = 45000.0;
@@ -144,8 +145,9 @@ public class Robot extends TimedRobot {
 
     @Override
   public void robotInit() {
-    m_chooser.setDefaultOption("Taxi Auto", k_taxiAuto);
+    m_chooser.setDefaultOption("Fancy Auto", k_ScoreDriveTurnDriveCollect); //change back to Ball Auto 
     m_chooser.addOption("Ball Auto", k_ballShootingAuto);
+    m_chooser.addOption("Fancy Auto", k_ScoreDriveTurnDriveCollect);
     SmartDashboard.putData("Auto choices", m_chooser);
 
     m_colorMatcher.addColorMatch(kBlueTarget);
@@ -292,7 +294,7 @@ public class Robot extends TimedRobot {
         }
       break;
 
-      case "Score turn drive collect turn score":
+      case k_ScoreDriveTurnDriveCollect:
           LeftFront.set(ControlMode.PercentOutput, kZero);
           LeftRear.set(ControlMode.PercentOutput, kZero);
           RightFront.set(ControlMode.PercentOutput, kZero);
@@ -823,7 +825,14 @@ public class Robot extends TimedRobot {
       intakeUpDownState = true;
       Timer.delay(0.5);
     }
+
     if (intakeUpDownState) {
+      if (upperLimitSwitch.get());
+        intakeMotor.set(kUpDeploy);
+    } else {
+      intakeMotor.set(kZero);
+    }
+    /*if (intakeUpDownState) {
       if (!upperLimitSwitch.get()) {
         intakeMotor.set(kDownDeploy);
       } else {
@@ -836,9 +845,9 @@ public class Robot extends TimedRobot {
         intakeMotor.set(-1.0 * kUpDeploy);
       } else {
         intakeMotor.set(0.0);
-      }
-    } 
-  }
+      } 
+    } */ 
+  } 
 
   double Deadband(double value) {
     if (value >= kDeadband) { //Upper deadband
