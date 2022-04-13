@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -121,7 +122,7 @@ public class Robot extends TimedRobot {
   final double kShooterPercentSpin = 0.5;
   final double kShooterPercentShoot = 0.86;
   final double kShooterTarget = 18000.0;
-  final double kShooterVelocity = 25000.0;
+  final double kShooterVelocity = 24000.0;
   final double kSpinupFeedforward = 0.5;
   final double kFireFeedforward = 0.80;
   final double kBlueConfidence = 0.9;
@@ -133,8 +134,12 @@ public class Robot extends TimedRobot {
   final long kTaxiDelay = 10000;
   final double kTaxiDistance = 90000.0;
   final long kPulseLength = 100;
-  final double kIntakeDeploySpeed = 0.5;
   final double kIntakeHold = 0.1;
+  final double kUpDeploy = 0.5;
+  final double kDownDeploy = 0.1;
+  final double kAutoTestSpeed = 0.2;
+  final double kTravel2Turn = 45000.0;
+  final double kAuto180 = 300.00; //change to whatever we need to get to 180 degrees
 
 
     @Override
@@ -286,6 +291,86 @@ public class Robot extends TimedRobot {
           m_autoSelected = "autoEnd";
         }
       break;
+
+      case "Score turn drive collect turn score":
+          LeftFront.set(ControlMode.PercentOutput, kZero);
+          LeftRear.set(ControlMode.PercentOutput, kZero);
+          RightFront.set(ControlMode.PercentOutput, kZero);
+          RightRear.set(ControlMode.PercentOutput, kZero);
+          
+          if ((System.currentTimeMillis() - matchTime) > kShooterDelay) { //shooter runs until empty. Change 3 to proper length
+            shooterMotor.set(ControlMode.PercentOutput, kZero);
+            conveyorMotor.set(kZero);
+          } else {
+            shooterMotor.set(ControlMode.PercentOutput, ShooterControl(kShooterVelocity, kFireFeedforward));
+            if (shooterMotor.getSelectedSensorVelocity() >= kShooterTarget) {
+              conveyorMotor.set(-kConveyorSpeed);
+            }
+          }
+          if ((System.currentTimeMillis() - matchTime) > kShooterDelay) { //shooter runs until empty. Change 3 to proper length
+            m_autoSelected = "reverse2turn";
+          }
+      break;
+
+      case "reverse2turn":
+        LeftFront.set(ControlMode.PercentOutput, -kAutoTestSpeed);
+        LeftRear.set(ControlMode.PercentOutput,-kAutoTestSpeed);
+        RightFront.set(ControlMode.PercentOutput, -kAutoTestSpeed);
+        RightRear.set(ControlMode.PercentOutput, -kAutoTestSpeed);
+        shooterMotor.set(ControlMode.PercentOutput, kZero);
+        conveyorMotor.set(kZero);
+        if (LeftFront.getSelectedSensorPosition() <= -kTravel2Turn) { 
+          m_autoSelected = "autoTurn";
+        }
+      break;
+
+      case "autoTurn":
+      LeftFront.set(ControlMode.PercentOutput, -kAutoTestSpeed);
+      LeftRear.set(ControlMode.PercentOutput,-kAutoTestSpeed);
+      RightFront.set(ControlMode.PercentOutput, kAutoTestSpeed);
+      RightRear.set(ControlMode.PercentOutput, kAutoTestSpeed);
+      if (LeftFront.getSelectedSensorPosition() <= kAuto180) { 
+        m_autoSelected = "forward2ball";
+      }
+      break;
+
+      case "forward2ball":
+      LeftFront.set(ControlMode.PercentOutput, kAutoTestSpeed);
+      LeftRear.set(ControlMode.PercentOutput, kAutoTestSpeed);
+      RightFront.set(ControlMode.PercentOutput, kAutoTestSpeed);
+      RightRear.set(ControlMode.PercentOutput, kAutoTestSpeed);
+      intakeMotor.set(kIntakeSpeed);
+
+      if(inGate_BB.get()) {
+        intakeMotor.set(kZero);
+      }
+
+      if (LeftFront.getSelectedSensorPosition() <= -kTravel2Turn) { 
+        m_autoSelected = "autoTurn2";
+      }
+      break;
+
+      case "autoTurn2":
+      LeftFront.set(ControlMode.PercentOutput, -kAutoTestSpeed);
+      LeftRear.set(ControlMode.PercentOutput,-kAutoTestSpeed);
+      RightFront.set(ControlMode.PercentOutput, kAutoTestSpeed);
+      RightRear.set(ControlMode.PercentOutput, kAutoTestSpeed);
+      if (LeftFront.getSelectedSensorPosition() <= kAuto180) { 
+        m_autoSelected = "forward2Shoot";
+      }
+      break;
+
+      case "forward2Shoot":
+      LeftFront.set(ControlMode.PercentOutput, -kAutoTestSpeed);
+      LeftRear.set(ControlMode.PercentOutput,-kAutoTestSpeed);
+      RightFront.set(ControlMode.PercentOutput, -kAutoTestSpeed);
+      RightRear.set(ControlMode.PercentOutput, -kAutoTestSpeed);
+      shooterMotor.set(ControlMode.PercentOutput, kZero);
+      conveyorMotor.set(kZero);
+      if (LeftFront.getSelectedSensorPosition() <= 2*(-kTravel2Turn)) { 
+        m_autoSelected = "k_ballShootingAuto";
+      }
+    break;
 
     }
   }
@@ -732,23 +817,28 @@ public class Robot extends TimedRobot {
     //intake control
     if (driverController.getBButton() && intakeUpDownState) {
       intakeUpDownState = false;
+      Timer.delay(0.5);
     }
     if (driverController.getBButton() && !intakeUpDownState) {
       intakeUpDownState = true;
+      Timer.delay(0.5);
     }
     if (intakeUpDownState) {
       if (!upperLimitSwitch.get()) {
-        intakeMotor.set(kIntakeDeploySpeed);
+        intakeMotor.set(kDownDeploy);
       } else {
         intakeMotor.set(kZero);
       }
+
+      intakeMotor.set(kDownDeploy);
     } else {
       if (!lowerLimitSwitch.get()) {
-        intakeMotor.set(-1.0 * kIntakeDeploySpeed);
+        intakeMotor.set(-1.0 * kUpDeploy);
       } else {
-        intakeMotor.set(-1.0 * kIntakeHold); } }
+        intakeMotor.set(0.0);
       }
-    
+    } 
+  }
 
   double Deadband(double value) {
     if (value >= kDeadband) { //Upper deadband
@@ -767,3 +857,7 @@ public class Robot extends TimedRobot {
     return output; //change 0.7 to some other value
   }
 }
+
+//omit lower limit switch
+//pulse down to deploy
+// up until limit switch
