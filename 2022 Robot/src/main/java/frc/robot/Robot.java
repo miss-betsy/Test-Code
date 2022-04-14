@@ -137,7 +137,7 @@ public class Robot extends TimedRobot {
   final double kTaxiDistance = 90000.0;
   final long kPulseLength = 100;
   final double kIntakeHold = 0.1;
-  final double kUpDeploy = -0.5;
+  final double kUpDeploy = -0.25;
   final double kDownDeploy = 0.1;
   final double kAutoTestSpeed = 0.2;
   final double kAutoTestTurn = 0.35;
@@ -525,10 +525,10 @@ public class Robot extends TimedRobot {
     */
 
     //Climber Control - change Pneumatictest to poneumaticreach
-    if (OPController.getPOV() == 180) {
+    if (OPController.getPOV() == 0) {
       pneumaticreach.set(Value.kForward); //down on dpad extends hooks (drop)
     }
-    if (OPController.getPOV() == 0) {
+    if (OPController.getPOV() == 180) {
       pneumaticreach.set(Value.kReverse); //up on dpad retracts hooks (pullup)
     }
     if (OPController.getPOV() == 90) {
@@ -887,6 +887,7 @@ public class Robot extends TimedRobot {
       intakeUpDownState = false;
       Timer.delay(0.5);
     }
+    intakeMotor.set(kDownDeploy);
     if (driverController.getBButton() && !intakeUpDownState) {
       intakeUpDownState = true;
       Timer.delay(0.5);
