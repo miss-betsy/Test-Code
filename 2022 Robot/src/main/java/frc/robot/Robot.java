@@ -70,7 +70,7 @@ public class Robot extends TimedRobot {
   //Roller Drive: In/Out - Spark Max and Neo
   CANSparkMax rollerMotor = new CANSparkMax(5, MotorType.kBrushless);
   //Arm: Up/Down - Spark Max and Neo
-  CANSparkMax intakeMotor = new CANSparkMax(6, MotorType.kBrushless);
+  CANSparkMax intakeMotor = new CANSparkMax(6, MotorType.kBrushless );
   DigitalInput upperLimitSwitch = new DigitalInput(9);
   DigitalInput lowerLimitSwitch = new DigitalInput(8);
 
@@ -140,7 +140,7 @@ public class Robot extends TimedRobot {
   final double kUpDeploy = -0.25;
   final double kDownDeploy = 0.1;
   final double kAutoTestSpeed = 0.2;
-  final double kAutoTestTurn = 0.35;
+  final double kAutoTestTurn = 0.33;
   final double kTravel2Turn = 50000.0;
   final double kAuto180 = 46000.00; //change to whatever we need to get to 180 degrees
   final double kTravel2Ball = 77500.0;
@@ -885,9 +885,10 @@ public class Robot extends TimedRobot {
     //intake control
     if (driverController.getBButton() && intakeUpDownState) {
       intakeUpDownState = false;
-      Timer.delay(0.5);
+      intakeMotor.set(kDownDeploy);
+      Timer.delay(0.9);
     }
-    intakeMotor.set(kDownDeploy);
+    
     if (driverController.getBButton() && !intakeUpDownState) {
       intakeUpDownState = true;
       Timer.delay(0.5);
