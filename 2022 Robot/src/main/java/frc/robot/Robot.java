@@ -42,6 +42,7 @@ public class Robot extends TimedRobot {
   private static final String k_taxiAuto = "Taxi Auto";
   private static final String k_ballShootingAuto = "Ball Auto";
   private static final String k_ScoreDriveTurnDriveCollect = "Fancy Auto";
+  private static final String k_ScoreTurnDrive = "Long Loop";
 
   //Controller
   XboxController driverController = new XboxController(0);
@@ -136,18 +137,22 @@ public class Robot extends TimedRobot {
   final double kTaxiDistance = 90000.0;
   final long kPulseLength = 100;
   final double kIntakeHold = 0.1;
-  final double kUpDeploy = -0.02;
+  final double kUpDeploy = -0.5;
   final double kDownDeploy = 0.1;
   final double kAutoTestSpeed = 0.2;
-  final double kTravel2Turn = 45000.0;
-  final double kAuto180 = 300.00; //change to whatever we need to get to 180 degrees
+  final double kAutoTestTurn = 0.35;
+  final double kTravel2Turn = 50000.0;
+  final double kAuto180 = 46000.00; //change to whatever we need to get to 180 degrees
+  final double kTravel2Ball = 77500.0;
+  final double kIntakeAutoSpeed = 0.8;
 
 
     @Override
   public void robotInit() {
-    m_chooser.setDefaultOption("Fancy Auto", k_ScoreDriveTurnDriveCollect); //change back to Ball Auto 
+    m_chooser.setDefaultOption("Ball Auto", k_ballShootingAuto); //change back to Ball Auto 
     m_chooser.addOption("Ball Auto", k_ballShootingAuto);
     m_chooser.addOption("Fancy Auto", k_ScoreDriveTurnDriveCollect);
+    m_chooser.addOption("Long Loop", k_ScoreTurnDrive);
     SmartDashboard.putData("Auto choices", m_chooser);
 
     m_colorMatcher.addColorMatch(kBlueTarget);
@@ -218,12 +223,17 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
     m_autoSelected = m_chooser.getSelected();
     m_autoSelected = SmartDashboard.getString("Auto Selector", k_ballShootingAuto);
+    //m_autoSelected = SmartDashboard.getString("Fancy Auto", k_ScoreDriveTurnDriveCollect);
+    //m_autoSelected = SmartDashboard.getString("Long Loop", k_ScoreTurnDrive);
     System.out.println("Auto selected: " + m_autoSelected);
 
     //tells the robot what alliance color we are
     allianceColor = DriverStation.getAlliance().toString();
 
     LeftFront.setSelectedSensorPosition(kZero);
+    RightFront.setSelectedSensorPosition(kZero);
+    LeftRear.setSelectedSensorPosition(kZero);
+    RightRear.setSelectedSensorPosition(kZero);
 
     matchTime = System.currentTimeMillis();
 
@@ -262,7 +272,7 @@ public class Robot extends TimedRobot {
         conveyorMotor.set(kZero);
       break;
 
-      case k_ballShootingAuto:
+      case k_ballShootingAuto: //remove quotes
         LeftFront.set(ControlMode.PercentOutput, kZero);
         LeftRear.set(ControlMode.PercentOutput, kZero);
         RightFront.set(ControlMode.PercentOutput, kZero);
@@ -294,11 +304,68 @@ public class Robot extends TimedRobot {
         }
       break;
 
-      case k_ScoreDriveTurnDriveCollect:
+      case k_ScoreTurnDrive:
           LeftFront.set(ControlMode.PercentOutput, kZero);
           LeftRear.set(ControlMode.PercentOutput, kZero);
           RightFront.set(ControlMode.PercentOutput, kZero);
           RightRear.set(ControlMode.PercentOutput, kZero);
+          intakeMotor.set(kZero);
+          
+          if ((System.currentTimeMillis() - matchTime) > kShooterDelay) { //shooter runs until empty. Change 3 to proper length
+            shooterMotor.set(ControlMode.PercentOutput, kZero);
+            conveyorMotor.set(kZero);
+          } else {
+            shooterMotor.set(ControlMode.PercentOutput, ShooterControl(kShooterVelocity, kFireFeedforward));
+            if (shooterMotor.getSelectedSensorVelocity() >= kShooterTarget) {
+              conveyorMotor.set(-kConveyorSpeed);
+            }
+          }
+          if ((System.currentTimeMillis() - matchTime) > kShooterDelay) { //shooter runs until empty. Change 3 to proper length
+            m_autoSelected = "AutoTurn";
+          }
+      break;
+
+      case "AutoTurn":
+          LeftFront.set(ControlMode.PercentOutput, kAutoTestTurn);
+          LeftRear.set(ControlMode.PercentOutput,kAutoTestTurn);
+          RightFront.set(ControlMode.PercentOutput, -kAutoTestTurn);
+          RightRear.set(ControlMode.PercentOutput, -kAutoTestTurn);
+          if (RightFront.getSelectedSensorPosition() <= -kAuto180) {
+            LeftFront.setSelectedSensorPosition(kZero); 
+            m_autoSelected = "Drive2Ball";
+          }
+      break;
+
+      case "Drive2Ball":
+        LeftFront.set(ControlMode.PercentOutput, kAutoTestSpeed);
+        LeftRear.set(ControlMode.PercentOutput, kAutoTestSpeed);
+        RightFront.set(ControlMode.PercentOutput, kAutoTestSpeed);
+        RightRear.set(ControlMode.PercentOutput, kAutoTestSpeed);
+        rollerMotor.set(-kIntakeAutoSpeed);
+        Timer.delay(0.2);
+        if (inGate_BB.get()) {
+         LeftFront.setSelectedSensorPosition(kZero); 
+          m_autoSelected = "AutoTurn2";
+        }
+         
+        case "AutoTurn2":
+        LeftFront.set(ControlMode.PercentOutput, -kAutoTestTurn);
+        LeftRear.set(ControlMode.PercentOutput,-kAutoTestTurn);
+        RightFront.set(ControlMode.PercentOutput, kAutoTestTurn);
+        RightRear.set(ControlMode.PercentOutput, kAutoTestTurn);
+        rollerMotor.set(kZero);
+        if (LeftFront.getSelectedSensorPosition() <= -kAuto180) {
+          LeftFront.setSelectedSensorPosition(kZero); 
+          m_autoSelected = "autoEnd";
+        }
+        break;
+
+      /* case k_ScoreDriveTurnDriveCollect:
+          LeftFront.set(ControlMode.PercentOutput, kZero);
+          LeftRear.set(ControlMode.PercentOutput, kZero);
+          RightFront.set(ControlMode.PercentOutput, kZero);
+          RightRear.set(ControlMode.PercentOutput, kZero);
+          intakeMotor.set(kZero);
           
           if ((System.currentTimeMillis() - matchTime) > kShooterDelay) { //shooter runs until empty. Change 3 to proper length
             shooterMotor.set(ControlMode.PercentOutput, kZero);
@@ -321,7 +388,7 @@ public class Robot extends TimedRobot {
         RightRear.set(ControlMode.PercentOutput, -kAutoTestSpeed);
         shooterMotor.set(ControlMode.PercentOutput, kZero);
         conveyorMotor.set(kZero);
-        if (LeftFront.getSelectedSensorPosition() <= -kTravel2Turn) { 
+        if (LeftFront.getSelectedSensorPosition() <= -kTravel2Turn) {
           m_autoSelected = "autoTurn";
         }
       break;
@@ -331,7 +398,7 @@ public class Robot extends TimedRobot {
       LeftRear.set(ControlMode.PercentOutput,-kAutoTestSpeed);
       RightFront.set(ControlMode.PercentOutput, kAutoTestSpeed);
       RightRear.set(ControlMode.PercentOutput, kAutoTestSpeed);
-      if (LeftFront.getSelectedSensorPosition() <= kAuto180) { 
+      if (RightFront.getSelectedSensorPosition() <= kAuto180) { 
         m_autoSelected = "forward2ball";
       }
       break;
@@ -341,13 +408,9 @@ public class Robot extends TimedRobot {
       LeftRear.set(ControlMode.PercentOutput, kAutoTestSpeed);
       RightFront.set(ControlMode.PercentOutput, kAutoTestSpeed);
       RightRear.set(ControlMode.PercentOutput, kAutoTestSpeed);
-      intakeMotor.set(kIntakeSpeed);
+      rollerMotor.set(kIntakeSpeed);
 
       if(inGate_BB.get()) {
-        intakeMotor.set(kZero);
-      }
-
-      if (LeftFront.getSelectedSensorPosition() <= -kTravel2Turn) { 
         m_autoSelected = "autoTurn2";
       }
       break;
@@ -357,6 +420,7 @@ public class Robot extends TimedRobot {
       LeftRear.set(ControlMode.PercentOutput,-kAutoTestSpeed);
       RightFront.set(ControlMode.PercentOutput, kAutoTestSpeed);
       RightRear.set(ControlMode.PercentOutput, kAutoTestSpeed);
+      rollerMotor.set(kZero);
       if (LeftFront.getSelectedSensorPosition() <= kAuto180) { 
         m_autoSelected = "forward2Shoot";
       }
@@ -370,9 +434,9 @@ public class Robot extends TimedRobot {
       shooterMotor.set(ControlMode.PercentOutput, kZero);
       conveyorMotor.set(kZero);
       if (LeftFront.getSelectedSensorPosition() <= 2*(-kTravel2Turn)) { 
-        m_autoSelected = "k_ballShootingAuto";
+        m_autoSelected = k_ballShootingAuto;
       }
-    break;
+    break; */
 
     }
   }
@@ -382,6 +446,8 @@ public class Robot extends TimedRobot {
     LeftFront.setSelectedSensorPosition(kZero);
 
     allianceColor = DriverStation.getAlliance().toString();
+
+    intakeUpDownState = false;
 
     conveyorState = "intake1";
 
@@ -827,8 +893,11 @@ public class Robot extends TimedRobot {
     }
 
     if (intakeUpDownState) {
-      if (upperLimitSwitch.get());
+      if (upperLimitSwitch.get()) {
         intakeMotor.set(kUpDeploy);
+      } else {
+      intakeMotor.set(kZero);
+      }
     } else {
       intakeMotor.set(kZero);
     }
